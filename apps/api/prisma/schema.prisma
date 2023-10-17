@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  name     String
+
+  team   Team?   @relation(fields: [teamId], references: [id])
+  teamId String?
+}
+
+model Team {
+  id   String @id @default(cuid())
+  name String
+
+  members User[]
+
+  queue Queue[]
+}
+
+model Game {
+  id   String @id @default(cuid())
+  name String
+
+  queues Queue[]
+}
+
+model Queue {
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  game   Game   @relation(fields: [gameId], references: [id])
+  gameId String
+
+  @@id([teamId, gameId])
+}
