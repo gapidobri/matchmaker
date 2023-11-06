@@ -5,9 +5,9 @@
 
 <a href="/">Home</a>
 
-<h1>Create Team</h1>
+<h1>Create Party</h1>
 
-<form action="?/createTeam" method="post" use:enhance>
+<form action="?/createParty" method="post" use:enhance>
 	<label for="name">Name</label>
 	<input type="text" name="name" id="name" />
 	<br />

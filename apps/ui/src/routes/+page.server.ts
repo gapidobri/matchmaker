@@ -2,16 +2,17 @@ import { getUserId } from '$lib/auth';
 import { prisma } from '$lib/prisma';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { emitPartyUpdate } from '$lib/events';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
 
-	const teamMember = await prisma.teamMember.findFirst({ where: { userId } });
-	if (!teamMember) {
-		return { team: null };
+	const partyMember = await prisma.partyMember.findFirst({ where: { userId } });
+	if (!partyMember) {
+		return { party: null };
 	}
 
-	const team = await prisma.team.findFirst({
+	const party = await prisma.party.findFirst({
 		where: { members: { some: { userId } } },
 		include: {
 			members: {
@@ -25,7 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					},
 				},
 			},
-			joinRequests: teamMember.leader && {
+			joinRequests: partyMember.leader && {
 				select: {
 					id: true,
 					name: true,
@@ -34,48 +35,50 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 	});
 
-	return { team, leader: teamMember.leader };
+	return { party, leader: partyMember.leader };
 };
 
 export const actions: Actions = {
-	// joinTeam joins a user to a team by code
-	async joinTeam({ locals, request }) {
+	// joinParty joins a user to a party by code
+	async joinParty({ locals, request }) {
 		const userId = await getUserId(locals);
 
 		const data = await request.formData();
 
 		const code = data.get('code') as string | null;
 		if (!code) {
-			throw error(400, 'Team code is missing');
+			throw error(400, 'Party code is missing');
 		}
 
-		const team = await prisma.team.findUnique({ where: { code } });
-		if (!team) {
-			return { success: false, message: 'Team not found' };
+		const party = await prisma.party.findUnique({ where: { code } });
+		if (!party) {
+			return { success: false, message: 'Party not found' };
 		}
 
-		await prisma.team.update({
-			where: team,
+		await prisma.party.update({
+			where: party,
 			data: { joinRequests: { connect: { id: userId } } },
 		});
+
+		emitPartyUpdate(party.id);
 	},
 
-	// leaveTeam removes a user from a team
-	async leaveTeam({ locals }) {
+	// leaveParty removes a user from a party
+	async leaveParty({ locals }) {
 		const userId = await getUserId(locals);
 
-		const { teamId } = await prisma.teamMember.delete({
+		const { partyId } = await prisma.partyMember.delete({
 			where: { userId },
 		});
 
-		const newLeader = await prisma.teamMember.findFirst({
-			where: { teamId },
+		const newLeader = await prisma.partyMember.findFirst({
+			where: { partyId },
 		});
 		if (!newLeader) {
 			return;
 		}
 
-		await prisma.teamMember.update({
+		await prisma.partyMember.update({
 			where: newLeader,
 			data: { leader: true },
 		});
@@ -92,21 +95,21 @@ export const actions: Actions = {
 			throw error(400, 'User ID is missing');
 		}
 
-		// Find team where the user is leader and joining user has requested to join
-		const team = await prisma.team.findFirst({
+		// Find party where the user is leader and joining user has requested to join
+		const party = await prisma.party.findFirst({
 			where: {
 				members: { some: { userId, leader: true } },
 				joinRequests: { some: { id: joiningUserId } },
 			},
 		});
-		if (!team) {
-			throw error(404, 'Team not found');
+		if (!party) {
+			throw error(404, 'Party not found');
 		}
 
-		await prisma.team.update({
-			where: team,
+		await prisma.party.update({
+			where: party,
 			data: {
-				// Add user to members of the team
+				// Add user to members of the party
 				members: { create: { userId: joiningUserId } },
 				// Remove user from join requests
 				joinRequests: { disconnect: { id: joiningUserId } },
@@ -117,7 +120,7 @@ export const actions: Actions = {
 	// declineJoin declines a join request from a user
 	async declineJoin() {},
 
-	// kickMember kicks a member from the team
+	// kickMember kicks a member from the party
 	async kickMember({ locals, request }) {
 		const userId = await getUserId(locals);
 
@@ -132,10 +135,10 @@ export const actions: Actions = {
 			throw error(400, 'Cannot kick yourself');
 		}
 
-		await prisma.teamMember.delete({
+		await prisma.partyMember.delete({
 			where: {
 				userId: memberId,
-				team: {
+				party: {
 					members: {
 						some: {
 							userId,

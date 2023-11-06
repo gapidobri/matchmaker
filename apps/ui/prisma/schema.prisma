@@ -43,8 +43,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  teamMember   TeamMember?
-  joinRequests Team[]
+  partyMember  PartyMember?
+  joinRequests Party[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -61,12 +61,12 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Team {
+model Party {
   id   String @id @default(cuid())
   name String
   code String @unique
 
-  members      TeamMember[]
+  members      PartyMember[]
   queue        Queue[]
   matches      Match[]
   joinRequests User[]
@@ -75,19 +75,19 @@ model Team {
   updatedAt DateTime @updatedAt
 }
 
-model TeamMember {
+model PartyMember {
   user   User   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   userId String @unique
 
-  team   Team   @relation(fields: [teamId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  teamId String
+  party   Party  @relation(fields: [partyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  partyId String
 
   leader Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@id([userId, teamId])
+  @@id([userId, partyId])
 }
 
 model Game {
@@ -102,8 +102,8 @@ model Game {
 }
 
 model Queue {
-  team   Team   @relation(fields: [teamId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  teamId String
+  party   Party  @relation(fields: [partyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  partyId String
 
   game   Game   @relation(fields: [gameId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   gameId String
@@ -111,7 +111,7 @@ model Queue {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@id([teamId, gameId])
+  @@id([partyId, gameId])
 }
 
 enum MatchStatus {
@@ -123,7 +123,7 @@ enum MatchStatus {
 model Match {
   id String @id @default(cuid())
 
-  teams Team[]
+  parties Party[]
 
   game   Game   @relation(fields: [gameId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   gameId String

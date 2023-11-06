@@ -4,8 +4,9 @@ version: "3.4"
 name: matchmaker
 
 services:
-  postgresql:
+  authentik-db:
     image: docker.io/library/postgres:12-alpine
+    container_name: authentik-db
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d authentik -U authentik"]
@@ -20,8 +21,9 @@ services:
       POSTGRES_USER: authentik
       POSTGRES_DB: authentik
 
-  redis:
+  authentik-redis:
     image: docker.io/library/redis:alpine
+    container_name: authentik-redis
     command: --save 60 1 --loglevel warning
     restart: unless-stopped
     healthcheck:
@@ -33,13 +35,14 @@ services:
     volumes:
       - redis:/data
 
-  server:
+  authentik-server:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.8.3}
+    container_name: authentik-server
     restart: unless-stopped
     command: server
     environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__PASSWORD: authentik
@@ -51,16 +54,17 @@ services:
       - "9000:9000"
       - "9443:9443"
     depends_on:
-      - postgresql
-      - redis
+      - authentik-db
+      - authentik-redis
 
-  worker:
+  authentik-worker:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.8.3}
+    container_name: authentik-worker
     restart: unless-stopped
     command: worker
     environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
       AUTHENTIK_POSTGRESQL__USER: authentik
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__PASSWORD: authentik
@@ -78,8 +82,8 @@ services:
       - certs:/certs
       - custom-templates:/templates
     depends_on:
-      - postgresql
-      - redis
+      - authentik-db
+      - authentik-redis
 
 volumes:
   media:

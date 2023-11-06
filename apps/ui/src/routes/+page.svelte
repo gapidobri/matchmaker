@@ -1,27 +1,37 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
+	import { socket } from '$lib/websocket';
+	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 	export let form: ActionData;
+
+	onMount(() => {
+		socket.on('updateParty', () => {
+			console.log('updateParty');
+			invalidateAll();
+		});
+	});
 </script>
 
 <form method="post" use:enhance>
-	{#if !data.team}
-		<a href="/team/create">Create Team</a>
+	{#if !data.party}
+		<a href="/party/create">Create Party</a>
 		<br />
 		<br />
-		<label for="code">Team Code</label>
+		<label for="code">Party Code</label>
 		<input type="text" name="code" id="code" />
-		<button type="submit" formaction="?/joinTeam">Join</button>
+		<button type="submit" formaction="?/joinParty">Join</button>
 		<p>{form?.message ?? ''}</p>
 	{:else}
-		<h1>{data.team.name}</h1>
-		<h2>Code: {data.team.code}</h2>
-		<button type="submit" formaction="?/leaveTeam">Leave</button>
+		<h1>{data.party.name}</h1>
+		<h2>Code: {data.party.code}</h2>
+		<button type="submit" formaction="?/leaveParty">Leave</button>
 
-		<h2>Team Members</h2>
-		{#each data.team.members as member}
+		<h2>Party Members</h2>
+		{#each data.party.members as member}
 			<form method="post" use:enhance>
 				{member.user.name}
 				<input type="hidden" name="userId" value={member.user.id} />
@@ -33,7 +43,7 @@
 
 		{#if data.leader}
 			<h2>Join Requests</h2>
-			{#each data.team.joinRequests as request}
+			{#each data.party.joinRequests as request}
 				<form method="post" use:enhance>
 					{request.name}
 					<input type="hidden" name="userId" value={request.id} />

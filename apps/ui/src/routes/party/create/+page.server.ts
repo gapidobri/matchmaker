@@ -4,21 +4,21 @@ import type { Actions } from './$types';
 import { getUserId } from '$lib/auth';
 
 export const actions: Actions = {
-	async createTeam({ request, locals }) {
+	async createParty({ request, locals }) {
 		const userId = await getUserId(locals);
 
-		if (await prisma.teamMember.count({ where: { userId } })) {
-			throw error(400, 'You are already in a team');
+		if (await prisma.partyMember.count({ where: { userId } })) {
+			throw error(400, 'You are already in a party');
 		}
 
 		const data = await request.formData();
 
 		const name = data.get('name') as string | null;
 		if (!name) {
-			throw error(400, 'Team name is missing');
+			throw error(400, 'Party name is missing');
 		}
 
-		await prisma.team.create({
+		await prisma.party.create({
 			data: {
 				name,
 				code: (Math.random() + 1).toString(36).substring(7),
