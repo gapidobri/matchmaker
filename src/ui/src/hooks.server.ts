@@ -1,7 +1,7 @@
 import { SvelteKitAuth } from '@auth/sveltekit';
 import Authentik from '@auth/core/providers/authentik';
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { prisma } from '$lib/prisma';
+import { prisma } from '@matchmaker/common';
 import { env } from '$env/dynamic/private';
 
 export const handle = SvelteKitAuth({

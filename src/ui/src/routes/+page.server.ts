@@ -1,8 +1,8 @@
 import { getUserId } from '$lib/auth';
-import { prisma } from '$lib/prisma';
+import { prisma } from '@matchmaker/common';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { emitPartyUpdate } from '$lib/events';
+import { updateParty } from '$lib/events';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -60,7 +60,7 @@ export const actions: Actions = {
 			data: { joinRequests: { connect: { id: userId } } },
 		});
 
-		emitPartyUpdate(party.id);
+		updateParty(party.id);
 	},
 
 	// leaveParty removes a user from a party
@@ -118,7 +118,33 @@ export const actions: Actions = {
 	},
 
 	// declineJoin declines a join request from a user
-	async declineJoin() {},
+	async declineJoin({ locals, request }) {
+		const userId = await getUserId(locals);
+
+		const data = await request.formData();
+
+		const joiningUserId = data.get('userId') as string | null;
+		if (!joiningUserId) {
+			throw error(400, 'User ID is missing');
+		}
+
+		const party = await prisma.party.findFirst({
+			where: {
+				members: { some: { userId, leader: true } },
+				joinRequests: { some: { id: joiningUserId } },
+			},
+		});
+		if (!party) {
+			throw error(404, 'Party not found');
+		}
+
+		await prisma.party.update({
+			where: party,
+			data: {
+				joinRequests: { disconnect: { id: joiningUserId } },
+			},
+		});
+	},
 
 	// kickMember kicks a member from the party
 	async kickMember({ locals, request }) {

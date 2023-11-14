@@ -9,7 +9,7 @@
 	export let form: ActionData;
 
 	onMount(() => {
-		socket.on('updateParty', () => {
+		socket.on('update-party', () => {
 			console.log('updateParty');
 			invalidateAll();
 		});

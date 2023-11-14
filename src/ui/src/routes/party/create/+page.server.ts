@@ -1,4 +1,4 @@
-import { prisma } from '$lib/prisma';
+import { prisma } from '@matchmaker/common';
 import { error, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { getUserId } from '$lib/auth';

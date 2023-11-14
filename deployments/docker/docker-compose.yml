@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 name: matchmaker
 
@@ -15,6 +15,16 @@ services:
       - 5432:5432
     volumes:
       - data:/var/lib/postgresql/data
+
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - mqtt_data:/mosquitto/data
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   app:
     build:
@@ -34,3 +44,4 @@ services:
 
 volumes:
   data:
+  mqtt_data:

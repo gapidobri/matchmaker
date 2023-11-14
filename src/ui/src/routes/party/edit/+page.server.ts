@@ -1,5 +1,5 @@
 import { getUserId } from '$lib/auth';
-import { prisma } from '$lib/prisma';
+import { prisma } from '@matchmaker/common';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
