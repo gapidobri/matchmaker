@@ -10,7 +10,6 @@
 
 	onMount(() => {
 		socket.on('update-party', () => {
-			console.log('updateParty');
 			invalidateAll();
 		});
 	});

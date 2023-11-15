@@ -2,7 +2,7 @@ import { getUserId } from '$lib/auth';
 import { prisma } from '@matchmaker/common';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { updateParty } from '$lib/events';
+import { joinPlayerToParty, kickPlayerFromParty, updateParty } from '$lib/events';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -60,7 +60,7 @@ export const actions: Actions = {
 			data: { joinRequests: { connect: { id: userId } } },
 		});
 
-		updateParty(party.id);
+		joinPlayerToParty(userId, party.id);
 	},
 
 	// leaveParty removes a user from a party
@@ -82,6 +82,8 @@ export const actions: Actions = {
 			where: newLeader,
 			data: { leader: true },
 		});
+
+		kickPlayerFromParty(userId, partyId);
 	},
 
 	// acceptJoin accepts a join request from a user
@@ -115,6 +117,8 @@ export const actions: Actions = {
 				joinRequests: { disconnect: { id: joiningUserId } },
 			},
 		});
+
+		updateParty(party.id);
 	},
 
 	// declineJoin declines a join request from a user
@@ -144,6 +148,8 @@ export const actions: Actions = {
 				joinRequests: { disconnect: { id: joiningUserId } },
 			},
 		});
+
+		updateParty(party.id);
 	},
 
 	// kickMember kicks a member from the party
@@ -161,7 +167,7 @@ export const actions: Actions = {
 			throw error(400, 'Cannot kick yourself');
 		}
 
-		await prisma.partyMember.delete({
+		const partyMember = await prisma.partyMember.delete({
 			where: {
 				userId: memberId,
 				party: {
@@ -174,5 +180,7 @@ export const actions: Actions = {
 				},
 			},
 		});
+
+		updateParty(partyMember.partyId);
 	},
 };
