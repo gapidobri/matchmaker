@@ -1,4 +1,4 @@
-import { prisma } from '@matchmaker/common';
+import { prisma } from '$lib/prisma';
 import { EventEmitter } from 'events';
 
 export class LiveUpdateClient extends EventEmitter {

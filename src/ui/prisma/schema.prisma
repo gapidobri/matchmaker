@@ -90,9 +90,18 @@ model PartyMember {
   @@id([userId, partyId])
 }
 
+enum GameDeploymentType {
+  COMMAND // Run a command on the server to start the game
+  SERVER // Spin up a new server for the game
+}
+
 model Game {
   id   String @id @default(cuid())
   name String
+
+  deploymentType GameDeploymentType
+  // In case of COMMAND, this is the command to run. In case of SERVER, this is the deployment template
+  deploymentData String             @db.Text
 
   queues  Queue[]
   matches Match[]
@@ -115,9 +124,9 @@ model Queue {
 }
 
 enum MatchStatus {
-  PENDING
-  IN_PROGRESS
-  FINISHED
+  PENDING // Waiting for players to join
+  IN_PROGRESS // Game is running
+  FINISHED // Game has finished
 }
 
 model Match {
