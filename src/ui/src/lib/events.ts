@@ -1,19 +1,36 @@
-import type { JoinPlayer, KickPlayer } from '@matchmaker/common';
-import { mqtt } from './mqtt';
+import { prisma } from '@matchmaker/common';
+import { EventEmitter } from 'events';
 
-export function updateParty(partyId: string) {
-	console.log('Updating party', partyId);
-	mqtt.publish('update-party', partyId);
+export class LiveUpdateClient extends EventEmitter {
+	static clients: LiveUpdateClient[] = [];
+
+	constructor(public userId: string) {
+		super();
+		LiveUpdateClient.clients.push(this);
+	}
+
+	remove() {
+		const index = LiveUpdateClient.clients.indexOf(this);
+		if (~index) LiveUpdateClient.clients.splice(index, 1);
+	}
+
+	update() {
+		this.emit('update');
+	}
 }
 
-export function joinPlayerToParty(userId: string, partyId: string) {
-	console.log('Joining player', userId, 'to party', partyId);
-	const body: JoinPlayer = { userId, partyId };
-	mqtt.publish('join-player', JSON.stringify(body));
-}
+export async function emitPartyUpdate(partyId: string, ...clientIds: string[]) {
+	const partyMembers = await prisma.partyMember.findMany({
+		where: { partyId },
+	});
 
-export function kickPlayerFromParty(userId: string, partyId: string) {
-	console.log('Kicking player', userId, 'from party', partyId);
-	const body: KickPlayer = { userId, partyId };
-	mqtt.publish('kick-player', JSON.stringify(body));
+	const partyClients = LiveUpdateClient.clients.filter((client) =>
+		partyMembers.some(
+			(member) => member.userId === client.userId || clientIds.includes(client.userId),
+		),
+	);
+
+	for (const client of partyClients) {
+		client.update();
+	}
 }

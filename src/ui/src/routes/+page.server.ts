@@ -2,7 +2,7 @@ import { getUserId } from '$lib/auth';
 import { prisma } from '@matchmaker/common';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { joinPlayerToParty, kickPlayerFromParty, updateParty } from '$lib/events';
+import { emitPartyUpdate } from '$lib/events';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -60,7 +60,7 @@ export const actions: Actions = {
 			data: { joinRequests: { connect: { id: userId } } },
 		});
 
-		joinPlayerToParty(userId, party.id);
+		emitPartyUpdate(party.id);
 	},
 
 	// leaveParty removes a user from a party
@@ -83,7 +83,7 @@ export const actions: Actions = {
 			data: { leader: true },
 		});
 
-		kickPlayerFromParty(userId, partyId);
+		emitPartyUpdate(partyId);
 	},
 
 	// acceptJoin accepts a join request from a user
@@ -118,7 +118,7 @@ export const actions: Actions = {
 			},
 		});
 
-		updateParty(party.id);
+		emitPartyUpdate(party.id);
 	},
 
 	// declineJoin declines a join request from a user
@@ -149,7 +149,7 @@ export const actions: Actions = {
 			},
 		});
 
-		updateParty(party.id);
+		emitPartyUpdate(party.id);
 	},
 
 	// kickMember kicks a member from the party
@@ -181,6 +181,6 @@ export const actions: Actions = {
 			},
 		});
 
-		updateParty(partyMember.partyId);
+		emitPartyUpdate(partyMember.partyId, memberId);
 	},
 };

@@ -2,6 +2,7 @@ import { getUserId } from '$lib/auth';
 import { prisma } from '@matchmaker/common';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { emitPartyUpdate } from '$lib/events';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -41,5 +42,7 @@ export const actions: Actions = {
 			where: party,
 			data: { name },
 		});
+
+		emitPartyUpdate(party.id);
 	},
 };

@@ -26,21 +26,21 @@ services:
       - mqtt_data:/mosquitto/data
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  app:
-    build:
-      context: ../../
-      dockerfile: ./apps/app/dockerfile
-    container_name: app
-    restart: always
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@database:5432/matchmaker
-      AUTH_SECRET: N5hR1BlCFX9zLniNm+7ax1DlLaiCkGV1HBMcDTrG3TE=
-      OIDC_CLIENT_ID: 0sFIiyUaCQ5QeP4A7fOG4cnZvgabpbaKNUF8epEA
-      OIDC_CLIENT_SECRET: dxyz3PVGStu2YlhAGDvWWc9Tdov829tyBI8GMP7q9qgScdXBh5Oi6XvPwbrhZRA5UwrA6sVvfNrHfFWoMWMqKrWNtK9nc4tjYjuLfJ65K5vHyaXUzlHnEZgO7EmISJkd
-      OIDC_ISSUER: http://authentik-server:9000/application/o/matchmaker/
-      NEXTAUTH_URL: http://localhost:3000
-    ports:
-      - 3000:3000
+  # app:
+  #   build:
+  #     context: ../../
+  #     dockerfile: ./apps/app/dockerfile
+  #   container_name: app
+  #   restart: always
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:postgres@database:5432/matchmaker
+  #     AUTH_SECRET: N5hR1BlCFX9zLniNm+7ax1DlLaiCkGV1HBMcDTrG3TE=
+  #     OIDC_CLIENT_ID: 0sFIiyUaCQ5QeP4A7fOG4cnZvgabpbaKNUF8epEA
+  #     OIDC_CLIENT_SECRET: dxyz3PVGStu2YlhAGDvWWc9Tdov829tyBI8GMP7q9qgScdXBh5Oi6XvPwbrhZRA5UwrA6sVvfNrHfFWoMWMqKrWNtK9nc4tjYjuLfJ65K5vHyaXUzlHnEZgO7EmISJkd
+  #     OIDC_ISSUER: http://authentik-server:9000/application/o/matchmaker/
+  #     NEXTAUTH_URL: http://localhost:3000
+  #   ports:
+  #     - 3000:3000
 
 volumes:
   data:

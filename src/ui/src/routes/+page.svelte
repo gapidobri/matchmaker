@@ -2,16 +2,17 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import { socket } from '$lib/websocket';
 	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 	export let form: ActionData;
 
 	onMount(() => {
-		socket.on('update-party', () => {
+		const eventSource = new EventSource('/events');
+
+		eventSource.onmessage = () => {
 			invalidateAll();
-		});
+		};
 	});
 </script>
 
