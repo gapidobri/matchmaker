@@ -6,28 +6,28 @@ import { env } from '$env/dynamic/private';
 
 export const handle = SvelteKitAuth({
 	adapter: PrismaAdapter(prisma),
+	session: {
+		strategy: 'jwt',
+	},
 	providers: [
 		Authentik({
 			clientId: env.OIDC_CLIENT_ID,
 			clientSecret: env.OIDC_CLIENT_SECRET,
 			issuer: env.OIDC_ISSUER,
-			profile: (profile) => {
-				console.log('profile', profile);
-				return {
-					id: profile.sub,
-					name: profile.name,
-					email: profile.email,
-					groups: profile.groups,
-				};
-			},
 		}),
 	],
 	callbacks: {
-		session({ session, user }) {
-			if (session.user) {
-				session.user.id = user.id;
+		jwt({ token, profile }) {
+			if (profile) {
+				token.groups = profile.groups;
 			}
-			console.log({ session, user });
+			return token;
+		},
+		session({ session, token }) {
+			if (session.user && token.sub) {
+				session.user.id = token.sub;
+				session.user.groups = token.groups;
+			}
 			return session;
 		},
 	},
