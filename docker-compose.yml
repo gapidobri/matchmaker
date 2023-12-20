@@ -3,9 +3,9 @@ version: '3.9'
 name: matchmaker
 
 services:
-  database:
+  app-db:
     image: postgres:15
-    container_name: database
+    container_name: app-db
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -14,7 +14,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - data:/var/lib/postgresql/data
+      - app-db:/var/lib/postgresql/data
 
   mqtt:
     image: eclipse-mosquitto:2.0
@@ -23,7 +23,7 @@ services:
       - 1883:1883
       - 9001:9001
     volumes:
-      - mqtt_data:/mosquitto/data
+      - mqtt:/mosquitto/data
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   authentik-db:
@@ -37,7 +37,7 @@ services:
       retries: 5
       timeout: 5s
     volumes:
-      - database:/var/lib/postgresql/data
+      - authentik-db:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: authentik
       POSTGRES_USER: authentik
@@ -55,7 +55,7 @@ services:
       retries: 5
       timeout: 3s
     volumes:
-      - redis:/data
+      - authentik-redis:/data
 
   authentik-server:
     image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.8.3}
@@ -70,8 +70,8 @@ services:
       AUTHENTIK_POSTGRESQL__PASSWORD: authentik
       AUTHENTIK_SECRET_KEY: authentik
     volumes:
-      - media:/media
-      - custom-templates:/templates
+      - authentik-media:/media
+      - authentik-custom-templates:/templates
     ports:
       - '9000:9000'
       - '9443:9443'
@@ -91,30 +91,21 @@ services:
       AUTHENTIK_POSTGRESQL__NAME: authentik
       AUTHENTIK_POSTGRESQL__PASSWORD: authentik
       AUTHENTIK_SECRET_KEY: authentik
-    # `user: root` and the docker socket volume are optional.
-    # See more for the docker socket integration here:
-    # https://goauthentik.io/docs/outposts/integrations/docker
-    # Removing `user: root` also prevents the worker from fixing the permissions
-    # on the mounted folders, so when removing this make sure the folders have the correct UID/GID
-    # (1000:1000 by default)
     user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - media:/media
-      - certs:/certs
-      - custom-templates:/templates
+      - authentik-media:/media
+      - authentik-certs:/certs
+      - authentik-custom-templates:/templates
     depends_on:
       - authentik-db
       - authentik-redis
 
 volumes:
-  media:
-    driver: local
-  certs:
-    driver: local
-  custom-templates:
-    driver: local
-  database:
-    driver: local
-  redis:
-    driver: local
+  app-db:
+  mqtt:
+  authentik-db:
+  authentik-redis:
+  authentik-media:
+  authentik-custom-templates:
+  authentik-certs:

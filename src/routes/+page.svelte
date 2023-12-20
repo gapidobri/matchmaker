@@ -53,5 +53,24 @@
 				<br />
 			{/each}
 		{/if}
+
+		<h1>Select Game</h1>
+		<table>
+			<thead>
+				<th colspan="2">Name</th>
+				<th>Max Players</th>
+			</thead>
+			<tbody>
+				{#each data.games as game}
+					<tr>
+						<input type="radio" name="gameId" value={game.id} />
+						<td>{game.name}</td>
+						<td>{game.max_players}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+
+		<button type="submit" formaction="?/startGame">Start Game</button>
 	{/if}
 </form>
