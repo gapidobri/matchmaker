@@ -56,9 +56,8 @@ model Party {
   name String
   code String @unique
 
+  queue        Queue?
   members      PartyMember[]
-  queue        Queue[]
-  matches      Match[]
   joinRequests User[]
 
   createdAt DateTime @default(now())
@@ -74,6 +73,9 @@ model PartyMember {
 
   leader Boolean @default(false)
 
+  team   Team?   @relation(fields: [teamId], references: [id])
+  teamId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -82,7 +84,7 @@ model PartyMember {
 
 model Queue {
   party   Party  @relation(fields: [partyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  partyId String
+  partyId String @unique
 
   gameId String
 
@@ -90,6 +92,18 @@ model Queue {
   updatedAt DateTime @updatedAt
 
   @@id([partyId, gameId])
+}
+
+model Team {
+  id String @id @default(cuid())
+
+  players PartyMember[]
+
+  match   Match?  @relation(fields: [matchId], references: [id])
+  matchId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum MatchStatus {
@@ -101,7 +115,7 @@ enum MatchStatus {
 model Match {
   id String @id @default(cuid())
 
-  parties Party[]
+  teams Team[]
 
   gameId   String
   serverId String
