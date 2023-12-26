@@ -107,7 +107,8 @@ model Team {
 }
 
 enum MatchStatus {
-  PENDING // Waiting for players to join
+  CREATING // Creating the match
+  WAIT_FOR_JOIN // Waiting for players to join
   IN_PROGRESS // Game is running
   FINISHED // Game has finished
 }
@@ -118,9 +119,9 @@ model Match {
   teams Team[]
 
   gameId   String
-  serverId String
+  serverId String?
 
-  status MatchStatus @default(PENDING)
+  status MatchStatus @default(CREATING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

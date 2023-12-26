@@ -1,73 +1,134 @@
+import { PTERODACTYL_USER_ID } from '$env/static/private';
+import { getGame } from '$lib/game';
 import { prisma } from '$lib/prisma';
-import { error } from '@sveltejs/kit';
+import { pteroAdmin } from '$lib/pterodactyl';
 import type { PartyMember } from '@prisma/client';
 
-export async function createTeams(partyId: string) {
-	const party = await prisma.party.findUnique({
-		where: { id: partyId },
-		include: { queue: true, members: true },
+export async function processQueues(gameId: string) {
+	const teams = await createTeams(gameId);
+	if (teams.length === 0) return;
+
+	const match = await prisma.match.create({ data: { gameId } });
+
+	// TODO: Remove parties from queue
+
+	await prisma.team.createMany({
+		data: teams.map((members) => ({
+			matchId: match.id,
+			members: { connect: members },
+			match: { connect: { id: match.id } },
+		})),
 	});
 
-	if (!party) {
-		throw error(404, 'Party not found');
-	}
+	// Create game server / run commands
+	const serverId = await createServer(gameId, match.id);
 
-	if (!party.queue) {
-		throw error(400, 'Party is not in queue');
-	}
+	await prisma.match.update({
+		where: { id: match.id },
+		data: { serverId },
+	});
 
-	const gameId = party.queue.gameId;
+	// Invite players to match
+	// Start match
+}
 
-	// TODO: Get game config
-	const maxTeams = 2;
-	const maxTeamSize = 4;
-
-	// TODO: Preference to always split party into teams and dont add other parties
-
-	let parties = await prisma.party.findMany({
+export async function createTeams(gameId: string) {
+	const parties = await prisma.party.findMany({
 		where: { queue: { gameId } },
 		include: { members: true },
+		orderBy: { queue: { createdAt: 'desc' } },
 	});
 
-	parties = parties.toSorted((a, b) => b.members.length - a.members.length);
+	// TODO: Get from config
+	const config = {
+		minTeams: 2,
+		maxTeams: 4,
+		minTeamSize: 2,
+		maxTeamSize: 4,
+	};
 
-	const teams: PartyMember[][] = [[]];
-	let teamIndex = 0;
+	// TODO: Check minTeams and maxTeams, don't split same party into multiple games
 
-	// Handle the current party
-	if (party.members.length > maxTeamSize) {
-		// Party has to be split into multiple teams
-		for (const member of party.members) {
-			if (teams[teamIndex].length >= maxTeamSize) {
-				if (teams.length === maxTeams) {
-					// TODO: Can't make more teams
-					break;
-				}
-				teams.push([]);
-				teamIndex++;
-			}
-			teams[teamIndex].push(member);
-		}
-	} else {
-		// Party has the perfect size or is not big enough to fill a team
-		teams[0].push(...party.members);
-	}
+	const teams: PartyMember[][] = [];
 
-	let remainigFreeSlots = maxTeamSize - party.members.length;
+	for (const party of parties) {
+		if (party.members.length > config.maxTeamSize) {
+			const teamCount = party.members.length / config.maxTeamSize;
+			const newTeams: PartyMember[][] = Array.from({ length: teamCount }, () => []);
 
-	for (const otherParty of parties) {
-		if (otherParty.members.length > remainigFreeSlots) {
+			party.members.forEach((member, i) => {
+				newTeams[i % teamCount].push(member);
+			});
+
+			teams.push(...newTeams);
+			parties.splice(parties.indexOf(party), 1);
 			continue;
 		}
 
-		teams[0].push(...otherParty.members);
-		remainigFreeSlots -= otherParty.members.length;
-		parties.splice(parties.indexOf(otherParty), 1);
+		if (party.members.length < config.minTeamSize) {
+			parties.splice(parties.indexOf(party), 1);
+			let remaining = config.maxTeamSize - party.members.length;
+			const team = [...party.members];
+			for (const party of parties) {
+				if (remaining === 0) break;
+				if (party.members.length <= remaining) {
+					team.push(...party.members);
+					remaining -= party.members.length;
+					parties.splice(parties.indexOf(party), 1);
+				}
+			}
+
+			if (team.length >= config.minTeamSize) {
+				teams.push(team);
+			}
+			continue;
+		}
+
+		teams.push(party.members);
 	}
 
-	// Add other parties to the teams
-	if (teams[teamIndex].length >= maxTeamSize) {
-		teams.push([]);
-		teamIndex++;
+	return teams;
+}
+
+export async function createServer(gameId: string, name: string) {
+	// Get node with least servers
+	const servers = await pteroAdmin.getServers();
+
+	const nodeServerCount = new Map<number, number>();
+	for (const server of servers) {
+		const count = nodeServerCount.get(server.node) ?? 0;
+		nodeServerCount.set(server.node, count + 1);
 	}
+
+	const nodeId = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1])[0][0];
+	const node = await pteroAdmin.getNode(nodeId.toString());
+
+	// Get free allocation
+	const allocations = await node.getAllocations();
+	const allocation = allocations.find((a) => !a.assigned);
+	if (!allocation) {
+		throw new Error('No free allocations');
+	}
+
+	// Create server
+	const game = await getGame(gameId);
+
+	const server = await pteroAdmin.createServer({
+		...game.deployment.data,
+		name: `${game.id}-${name}`,
+		user: Number(PTERODACTYL_USER_ID),
+		image: game.deployment.data.docker_image,
+		featureLimits: {
+			databases: 0,
+			allocations: 0,
+			backups: 0,
+			split_limit: 0,
+		},
+		allocation: {
+			default: allocation?.id,
+			additional: [],
+		},
+	});
+
+	return server.id.toString();
 }

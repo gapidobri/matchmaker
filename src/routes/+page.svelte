@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import { invalidateAll } from '$app/navigation';
+	import { disableScrollHandling, invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -52,25 +52,21 @@
 				</form>
 				<br />
 			{/each}
-		{/if}
 
-		<h1>Select Game</h1>
-		<table>
-			<thead>
-				<th colspan="2">Name</th>
-				<th>Max Players</th>
-			</thead>
-			<tbody>
+			{#if !data.party.queue}
+				<h2>Select Game Queue</h2>
 				{#each data.games as game}
-					<tr>
+					<div>
 						<input type="radio" name="gameId" value={game.id} />
-						<td>{game.name}</td>
-						<td>{game.max_players}</td>
-					</tr>
+						{game.name}
+					</div>
 				{/each}
-			</tbody>
-		</table>
-
-		<button type="submit" formaction="?/startGame">Start Game</button>
+				<br />
+				<button type="submit" formaction="?/joinQueue">Join Queue</button>
+			{:else}
+				<h2>Queued for {data.party.queue.gameId}</h2>
+				<button type="submit" formaction="?/leaveQueue">Leave Queue</button>
+			{/if}
+		{/if}
 	{/if}
 </form>

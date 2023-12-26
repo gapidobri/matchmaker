@@ -24,5 +24,3 @@
 		{/each}
 	</tbody>
 </table>
-
-{JSON.stringify(data.allocations)}

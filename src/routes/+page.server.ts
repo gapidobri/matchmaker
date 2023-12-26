@@ -3,9 +3,12 @@ import { prisma } from '$lib/prisma';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { emitPartyUpdate } from '$lib/events';
-import { pterodactyl } from '$lib/pterodactyl';
+import { pteroAdmin } from '$lib/pterodactyl';
 import { PTERODACTYL_NODE_ID, PTERODACTYL_USER_ID } from '$env/static/private';
 import { getConfig } from '$lib/config';
+import { getGame } from '$lib/game';
+import { getPartyByUserId } from '$lib/party/party';
+import { processQueues } from '$lib/party/matchmaking';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -35,6 +38,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					name: true,
 				},
 			},
+			queue: true,
 		},
 	});
 
@@ -223,7 +227,7 @@ export const actions: Actions = {
 			throw error(404, 'Game not found');
 		}
 
-		const node = await pterodactyl.getNode(PTERODACTYL_NODE_ID);
+		const node = await pteroAdmin.getNode(PTERODACTYL_NODE_ID);
 		const allocations = await node.getAllocations();
 
 		const allocation = allocations.find((a) => !a.assigned);
@@ -231,7 +235,7 @@ export const actions: Actions = {
 			throw error(500, 'No free allocations');
 		}
 
-		const server = await pterodactyl.createServer({
+		const server = await pteroAdmin.createServer({
 			...game.deployment.data,
 			name: `${game.id}-${party.id}`,
 			user: Number(PTERODACTYL_USER_ID),
@@ -254,5 +258,49 @@ export const actions: Actions = {
 				serverId: server.id.toString(),
 			},
 		});
+	},
+
+	async joinQueue({ locals, request }) {
+		const userId = await getUserId(locals);
+
+		const data = await request.formData();
+
+		const gameId = data.get('gameId') as string | null;
+		if (!gameId) throw error(400, 'Game ID is missing');
+
+		const party = await getPartyByUserId(userId, true);
+
+		const game = await getGame(gameId);
+
+		await prisma.queue.create({
+			data: {
+				partyId: party.id,
+				gameId: game.id,
+			},
+		});
+
+		await emitPartyUpdate(party.id);
+
+		await processQueues(gameId);
+	},
+
+	async leaveQueue({ locals }) {
+		const userId = await getUserId(locals);
+
+		const party = await getPartyByUserId(userId, true);
+		if (!party.queue) {
+			throw error(400, 'Party is not in queue');
+		}
+
+		await prisma.queue.delete({
+			where: {
+				partyId_gameId: {
+					partyId: party.id,
+					gameId: party.queue.gameId,
+				},
+			},
+		});
+
+		await emitPartyUpdate(party.id);
 	},
 };
