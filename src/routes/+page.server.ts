@@ -3,8 +3,6 @@ import { prisma } from '$lib/prisma';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { emitPartyUpdate } from '$lib/events';
-import { pteroAdmin } from '$lib/pterodactyl';
-import { PTERODACTYL_NODE_ID, PTERODACTYL_USER_ID } from '$env/static/private';
 import { getConfig } from '$lib/config';
 import { getGame } from '$lib/game';
 import { getPartyByUserId } from '$lib/party/party';
@@ -13,7 +11,10 @@ import { processQueues } from '$lib/party/matchmaking';
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
 
-	const partyMember = await prisma.partyMember.findFirst({ where: { userId } });
+	const partyMember = await prisma.partyMember.findFirst({
+		where: { userId },
+		include: { team: { include: { match: { include: { server: true } } } } },
+	});
 	if (!partyMember) {
 		return { party: null };
 	}
@@ -44,7 +45,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const games = await getConfig();
 
-	return { party, leader: partyMember.leader, games };
+	return { party, leader: partyMember.leader, games, match: partyMember.team?.match };
 };
 
 export const actions: Actions = {
@@ -191,73 +192,6 @@ export const actions: Actions = {
 		});
 
 		emitPartyUpdate(partyMember.partyId, memberId);
-	},
-
-	async startGame({ locals, request }) {
-		const userId = await getUserId(locals);
-
-		const data = await request.formData();
-
-		const gameId = data.get('gameId') as string | null;
-		if (!gameId) {
-			throw error(400, 'Game ID is missing');
-		}
-
-		const partyMember = await prisma.partyMember.findFirst({
-			where: { userId, leader: true },
-		});
-
-		if (!partyMember) {
-			throw error(403, 'You are not the party leader');
-		}
-
-		const party = await prisma.party.findFirst({
-			where: { members: { some: { userId } } },
-		});
-
-		if (!party) {
-			throw error(404, 'Party not found');
-		}
-
-		const games = await getConfig();
-
-		const game = games.find((g) => g.id === gameId);
-
-		if (!game) {
-			throw error(404, 'Game not found');
-		}
-
-		const node = await pteroAdmin.getNode(PTERODACTYL_NODE_ID);
-		const allocations = await node.getAllocations();
-
-		const allocation = allocations.find((a) => !a.assigned);
-		if (!allocation) {
-			throw error(500, 'No free allocations');
-		}
-
-		const server = await pteroAdmin.createServer({
-			...game.deployment.data,
-			name: `${game.id}-${party.id}`,
-			user: Number(PTERODACTYL_USER_ID),
-			image: game.deployment.data.docker_image,
-			featureLimits: {
-				databases: 0,
-				allocations: 0,
-				backups: 0,
-				split_limit: 0,
-			},
-			allocation: {
-				default: allocation?.id,
-				additional: [],
-			},
-		});
-
-		prisma.match.create({
-			data: {
-				gameId: game.id,
-				serverId: server.id.toString(),
-			},
-		});
 	},
 
 	async joinQueue({ locals, request }) {

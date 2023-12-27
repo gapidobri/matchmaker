@@ -2,7 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import { disableScrollHandling, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
+	import { logger } from '$lib/logger';
+	import { MatchStatus } from '@prisma/client';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -53,7 +55,17 @@
 				<br />
 			{/each}
 
-			{#if !data.party.queue}
+			{#if data.match}
+				<h2>In match {data.match.id}</h2>
+				<p>Status: {data.match.status}</p>
+				{#if data.match.status === MatchStatus.WAIT_FOR_JOIN}
+					<p>IP: {data.match.server?.ip}</p>
+					<p>Port: {data.match.server?.port}</p>
+					{#if data.match.server?.password}
+						<p>Password: {data.match.server.password}</p>
+					{/if}
+				{/if}
+			{:else if !data.party.queue}
 				<h2>Select Game Queue</h2>
 				{#each data.games as game}
 					<div>
@@ -70,3 +82,5 @@
 		{/if}
 	{/if}
 </form>
+
+<br />

@@ -7,6 +7,7 @@ interface GameConfig {
 	name: string;
 	party_size: number;
 	max_players: number;
+	password?: boolean;
 	deployment: Deployment;
 }
 

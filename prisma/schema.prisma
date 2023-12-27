@@ -99,8 +99,8 @@ model Team {
 
   players PartyMember[]
 
-  match   Match?  @relation(fields: [matchId], references: [id])
-  matchId String?
+  match   Match  @relation(fields: [matchId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  matchId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,11 +118,23 @@ model Match {
 
   teams Team[]
 
-  gameId   String
-  serverId String?
+  gameId String
+
+  server Server?
 
   status MatchStatus @default(CREATING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id String @id
+
+  password String?
+  ip       String?
+  port     Int?
+
+  match   Match  @relation(fields: [matchId], references: [id])
+  matchId String @unique
 }
