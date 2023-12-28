@@ -1,10 +1,16 @@
 id: unturned
 name: Unturned
+type: steam
 
 party_size: 1
 max_players: 50
 
 password: true
+
+join_regex: 'Connecting: PlayerID: ([0-9]*)'
+leave_regex: 'Disconnecting: PlayerID: ([0-9]*)'
+list_command: 'players'
+list_regex: 'PlayerID: ([0-9]*).*Ping:'
 
 deployment:
   type: server

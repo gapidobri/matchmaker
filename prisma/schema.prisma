@@ -131,9 +131,7 @@ model Match {
 model Server {
   id String @id
 
-  password String?
-  ip       String?
-  port     Int?
+  connectionString String?
 
   match   Match  @relation(fields: [matchId], references: [id])
   matchId String @unique

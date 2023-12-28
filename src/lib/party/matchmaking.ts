@@ -1,4 +1,4 @@
-import { PTERODACTYL_USER_ID } from '$env/static/private';
+import { PTERODACTYL_USER_ID, PTERODACTYL_ALLOWED_NODES } from '$env/static/private';
 import { emitMatchUpdate } from '$lib/events';
 import { getGame } from '$lib/game';
 import { logger } from '$lib/logger';
@@ -145,12 +145,16 @@ export async function createServer(match: Match) {
 	// Get node with least servers
 	const servers = await pteroAdmin.getServers();
 
+	const allowedNodes = PTERODACTYL_ALLOWED_NODES.split(',').map(Number);
+
 	const nodeServerCount = new Map<number, number>();
 	for (const server of servers) {
+		if (!allowedNodes.includes(server.node)) continue;
 		const count = nodeServerCount.get(server.node) ?? 0;
 		nodeServerCount.set(server.node, count + 1);
 	}
 
+	// TODO: Get allowed nodes from config
 	const nodeId = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1])[0][0];
 	const node = await pteroAdmin.getNode(nodeId.toString());
 
@@ -194,12 +198,14 @@ export async function createServer(match: Match) {
 		},
 	});
 
+	const connectionString = `steam://connect/${allocation?.ip}:${allocation.port}${
+		password ? '/' + password : ''
+	}`;
+
 	await prisma.server.create({
 		data: {
 			id: server.uuid,
-			password,
-			ip: allocation.ip,
-			port: allocation.port,
+			connectionString,
 			match: { connect: { id: match.id } },
 		},
 	});
