@@ -1,49 +1,38 @@
-FROM node:alpine as base
+FROM oven/bun:1.0.21-debian AS base
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-RUN if [[ $(uname -m) == "aarch64" ]] ; \
-    then \
-    # aarch64
-    wget https://raw.githubusercontent.com/squishyu/alpine-pkg-glibc-aarch64-bin/master/glibc-2.26-r1.apk ; \
-    apk add --no-cache --allow-untrusted --force-overwrite glibc-2.26-r1.apk ; \
-    rm glibc-2.26-r1.apk ; \
-    else \
-    # x86_64
-    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.28-r0/glibc-2.28-r0.apk ; \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub ; \
-    apk add --no-cache --force-overwrite glibc-2.28-r0.apk ; \
-    rm glibc-2.28-r0.apk ; \
-    fi
+COPY --from=node:18 /usr/local/bin/node /usr/local/bin/node
 
-RUN npm install -g bun
-
-FROM base as build
-
-RUN bun i -g turbo
+FROM base AS build
 
 COPY package.json ./
 COPY bun.lockb ./
 
-COPY apps/app/package.json ./apps/app/package.json
-# Temporary
-COPY packages ./packages
-
 RUN bun install --frozen-lockfile
+
+COPY ./prisma/schema.prisma ./prisma/schema.prisma
+
+RUN bun run prisma:generate
 
 COPY . .
 
-RUN bunx prisma generate --schema=./apps/app/prisma/schema.prisma
+RUN bun run build
 
-RUN bun run build --filter=app...
+FROM base AS production
 
-FROM base
+COPY package.json ./
+COPY bun.lockb ./
 
-RUN bun i -g prisma
+RUN bun install -p --frozen-lockfile
 
-COPY --from=build /usr/src/app/apps/app/build ./
-COPY --from=build /usr/src/app/apps/app/package.json ./package.json
-COPY --from=build /usr/src/app/apps/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/apps/app/prisma ./prisma
+COPY ./prisma/schema.prisma ./prisma/schema.prisma
+RUN bun run prisma:generate
+
+COPY --from=build /app/build ./
+
+RUN bun install
+
+RUN rm /usr/local/bin/node
 
 CMD ["bun", "index.js"]

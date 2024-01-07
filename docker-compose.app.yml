@@ -1,0 +1,21 @@
+version: '3.9'
+
+name: matchmaker
+
+services:
+  app:
+    container_name: app
+    # build: .
+    image: matchmaker
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./config:/app/config
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@app-db:5432/matchmaker
+      OIDC_ISSUER: http://authentik-server:9000/application/o/matchmaker/
+      EXTERNAL_AUTH_URL: http://authentik.localhost
+    labels:
+      traefik.http.routers.app.rule: Host(`matchmaker.localhost`)

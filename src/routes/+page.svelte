@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
-	import { MatchStatus } from '@prisma/client';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -59,7 +58,7 @@
 			{#if data.match}
 				<h2>In match {data.match.id}</h2>
 				<p>Status: {data.match.status}</p>
-				{#if data.match.status === MatchStatus.WAIT_FOR_JOIN}
+				{#if data.match.status === 'WAIT_FOR_JOIN'}
 					<a href={data.match.server?.connectionString}>{data.match.server?.connectionString}</a>
 				{/if}
 			{:else if !data.party.queue}

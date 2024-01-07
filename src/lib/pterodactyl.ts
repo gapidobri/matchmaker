@@ -1,16 +1,16 @@
-import {
-	PTERODACTYL_URL,
-	PTERODACTYL_APP_API_KEY,
-	PTERODACTYL_USER_API_KEY,
-} from '$env/static/private';
-import { Builder } from '@avionrx/pterodactyl-js';
+import { env } from '$env/dynamic/private';
+import { Application, Client } from 'jspteroapi';
 
-export const pteroAdmin = new Builder()
-	.setURL(PTERODACTYL_URL)
-	.setAPIKey(PTERODACTYL_APP_API_KEY)
-	.asAdmin();
+export const pteroAdmin = new Application(
+	env.PTERODACTYL_URL ?? '',
+	env.PTERODACTYL_APP_API_KEY ?? '',
+	undefined,
+	true,
+);
 
-export const pteroUser = new Builder()
-	.setURL(PTERODACTYL_URL)
-	.setAPIKey(PTERODACTYL_USER_API_KEY)
-	.asUser();
+export const pteroUser = new Client(
+	env.PTERODACTYL_URL ?? '',
+	env.PTERODACTYL_USER_API_KEY ?? '',
+	undefined,
+	true,
+);

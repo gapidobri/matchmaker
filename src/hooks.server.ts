@@ -5,6 +5,8 @@ import { prisma } from '$lib/prisma';
 import { env } from '$env/dynamic/private';
 
 export const handle = SvelteKitAuth({
+	trustHost: true,
+	debug: env.NODE_ENV === 'development',
 	adapter: PrismaAdapter(prisma),
 	session: {
 		strategy: 'jwt',
@@ -14,6 +16,9 @@ export const handle = SvelteKitAuth({
 			clientId: env.OIDC_CLIENT_ID,
 			clientSecret: env.OIDC_CLIENT_SECRET,
 			issuer: env.OIDC_ISSUER,
+			authorization: env.EXTERNAL_AUTH_URL
+				? `${env.EXTERNAL_AUTH_URL}/application/o/authorize/`
+				: undefined,
 		}),
 	],
 	callbacks: {
