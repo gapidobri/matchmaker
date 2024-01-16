@@ -6,15 +6,16 @@ services:
   traefik:
     container_name: traefik
     image: traefik
-    command: --api.insecure=true --providers.docker
+    command: --api.insecure=true --providers.docker --entrypoints.web.address=:80 --entrypoints.websecure.address=:443
     ports:
       - 80:80
+      - 443:443
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
   app-db:
-    image: postgres:15
+    image: postgres:16
     container_name: app-db
     restart: always
     environment:
@@ -68,7 +69,7 @@ services:
       - authentik-redis:/data
 
   authentik-server:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.8.3}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.5}
     container_name: authentik-server
     restart: unless-stopped
     command: server
@@ -92,7 +93,7 @@ services:
       traefik.http.routers.authentik-server.rule: Host(`authentik.localhost`)
 
   authentik-worker:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.8.3}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.5}
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
@@ -112,6 +113,19 @@ services:
     depends_on:
       - authentik-db
       - authentik-redis
+
+  steam-oidc-proxy:
+    image: ghcr.io/gapidobri/steam-openid-connect-provider:master
+    container_name: steam-oidc-proxy
+    environment:
+      OpenID__RedirectUri: 'http://authentik.localhost/source/oauth/callback/steam/'
+      OpenID__ClientID: 'matchmaker'
+      OpenID__ClientSecret: 'matchmaker'
+      OpenID__ClientName: 'matchmaker'
+      Steam__ApplicationKey: '831BD493725A19F97AC66571A8553392'
+    labels:
+      traefik.http.routers.steam-oidc-proxy.rule: Host(`steam-oidc-proxy.localhost`)
+      traefik.http.routers.steam-oidc-proxy.tls: ''
 
 volumes:
   app-db:

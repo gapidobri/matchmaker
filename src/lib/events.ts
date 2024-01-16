@@ -20,6 +20,17 @@ export class LiveUpdateClient extends EventEmitter {
 	}
 }
 
+export async function emitUserUpdate(...userIds: string[]) {
+	logger.debug(`Emitting user update to ${userIds.length} users`);
+
+	const partyClients = LiveUpdateClient.clients.filter((client) => userIds.includes(client.userId));
+
+	for (const client of partyClients) {
+		logger.debug(`Emitting party update to ${client.userId}`);
+		client.update();
+	}
+}
+
 export async function emitPartyUpdate(partyId: string, ...clientIds: string[]) {
 	logger.debug(`Emitting party ${partyId} update`);
 	const partyMembers = await prisma.partyMember.findMany({

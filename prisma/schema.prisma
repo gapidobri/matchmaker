@@ -1,6 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-arm64-openssl-1.1.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -33,6 +32,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   accounts      Account[]
+  steamId       String?   @unique
 
   partyMember  PartyMember?
   joinRequests Party[]
@@ -77,6 +77,9 @@ model PartyMember {
   team   Team?   @relation(fields: [teamId], references: [id])
   teamId String?
 
+  connectedServer   Server? @relation(fields: [connectedServerId], references: [id])
+  connectedServerId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -111,7 +114,6 @@ enum MatchStatus {
   CREATING // Creating the match
   WAIT_FOR_JOIN // Waiting for players to join
   IN_PROGRESS // Game is running
-  FINISHED // Game has finished
 }
 
 model Match {
@@ -130,9 +132,14 @@ model Match {
 }
 
 model Server {
-  id String @id
+  id String @id @default(cuid())
+
+  pterodactylId   Int    @unique
+  pterodactylUuid String @unique
 
   connectionString String?
+
+  connectedPlayers PartyMember[]
 
   match   Match  @relation(fields: [matchId], references: [id])
   matchId String @unique

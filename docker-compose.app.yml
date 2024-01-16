@@ -5,8 +5,7 @@ name: matchmaker
 services:
   app:
     container_name: app
-    # build: .
-    image: matchmaker
+    build: .
     ports:
       - '3000:3000'
     volumes:

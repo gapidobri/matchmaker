@@ -85,9 +85,9 @@ export const actions: Actions = {
 			where: { partyId },
 		});
 		if (!newLeader) {
+			await prisma.party.delete({ where: { id: partyId } });
 			return;
 		}
-
 		await prisma.partyMember.update({
 			where: newLeader,
 			data: { leader: true },
@@ -205,6 +205,7 @@ export const actions: Actions = {
 		const party = await getPartyByUserId(userId, true);
 
 		const game = await getGame(gameId);
+		if (!game) throw error(404, 'Game not found');
 
 		await prisma.queue.create({
 			data: {

@@ -5,7 +5,7 @@ declare global {
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}
-		// interface Platform
+		// interface Platform {}
 	}
 }
 
@@ -14,6 +14,7 @@ declare module '@auth/core/types' {
 		user: {
 			id: string;
 			groups: string[];
+			steamId?: string;
 		} & DefaultSession['user'];
 	}
 }

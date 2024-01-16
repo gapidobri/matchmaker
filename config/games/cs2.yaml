@@ -1,0 +1,32 @@
+id: cs2
+name: CS2
+type: steam
+
+min_teams: 2
+max_teams: 2
+min_team_size: 1
+max_team_size: 5
+
+join_regex: 'Accepting Steam Net connection.*steamid:(?<userId>[0-9]*)'
+leave_regex: 'Steam Net connection #[0-9]* UDP steamid:(?<userId>[0-9]*).*closed by peer'
+
+deployment:
+  type: server
+  data:
+    nest: 2
+    egg: 18
+    docker_image: ghcr.io/1zc/steamrt3-pterodactyl:latest
+    startup: './game/cs2.sh -dedicated +ip 0.0.0.0 -port {{SERVER_PORT}} +map {{SRCDS_MAP}} -maxplayers {{SRCDS_MAXPLAYERS}} +sv_setsteamaccount {{STEAM_ACC}}'
+    limits:
+      memory: 0
+      swap: 0
+      disk: 0
+      io: 500
+      cpu: 0
+    environment:
+      SRCDS_MAP: de_dust2
+      SRCDS_APPID: 730
+      SRCDS_MAXPLAYERS: 64
+      SRCDS_STOP_UPDATE: 1
+      SRCDS_VALIDATE: 0
+      STEAM_ACC: A35C5AB344A7283F15FC8DC26899C0C6

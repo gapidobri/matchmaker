@@ -1,10 +1,8 @@
-import { env } from '$env/dynamic/private';
 import { emitMatchUpdate } from '$lib/events';
-import { getGame } from '$lib/game';
 import { logger } from '$lib/logger';
 import { prisma } from '$lib/prisma';
-import { pteroAdmin, pteroUser } from '$lib/pterodactyl';
-import type { Match, Party, PartyMember } from '@prisma/client';
+import { createServer, startServer } from '$lib/pterodactyl/server';
+import type { Party, PartyMember } from '@prisma/client';
 
 export async function processQueues(gameId: string) {
 	logger.info(`Processing queues for ${gameId}`);
@@ -46,34 +44,6 @@ export async function processQueues(gameId: string) {
 
 	// Invite players to match
 	// Start match
-}
-
-async function startServer(serverId: string) {
-	logger.info(`Starting server ${serverId}`);
-
-	let sentStart = false;
-	return new Promise<void>((resolve) => {
-		const interval = setInterval(async () => {
-			try {
-				const resources = await pteroUser.getServerResources(serverId);
-				const state = resources.current_state;
-				logger.debug(`Server ${serverId} state: ${state}`);
-				switch (state) {
-					case 'offline':
-						if (sentStart) break;
-						await pteroUser.setPowerState(serverId, 'start');
-						sentStart = true;
-						break;
-					case 'running':
-						logger.info(`Server ${serverId} started`);
-						clearInterval(interval);
-						resolve();
-				}
-			} catch (e) {
-				logger.debug(`Server ${serverId} state: installing`);
-			}
-		}, 2000);
-	});
 }
 
 export async function createTeams(gameId: string) {
@@ -137,81 +107,4 @@ export async function createTeams(gameId: string) {
 	}
 
 	return { teams, parties: usedParties };
-}
-
-export async function createServer(match: Match) {
-	logger.info(`Creating server for ${match.gameId}`);
-
-	// Get node with least servers
-	const servers = await pteroAdmin.getAllServers();
-
-	const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',').map(Number);
-
-	const nodeServerCount = new Map<number, number>();
-	for (const server of servers) {
-		if (!allowedNodes.includes(server.attributes.node)) continue;
-		const count = nodeServerCount.get(server.attributes.node) ?? 0;
-		nodeServerCount.set(server.attributes.node, count + 1);
-	}
-
-	// TODO: Get allowed nodes from config
-	const nodeId = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1])[0][0];
-
-	// Get free allocation
-	const allocations = await pteroAdmin.getAllAllocations(nodeId);
-	const allocation = allocations.find((a) => !a.attributes.assigned);
-	if (!allocation) {
-		throw new Error('No free allocations');
-	}
-
-	// Create server
-	const game = await getGame(match.gameId);
-
-	const { environment } = game.deployment.data;
-
-	let password: string | undefined;
-
-	if (game.password === true) {
-		password = Math.random().toString(36).slice(-8);
-
-		for (const key in environment) {
-			environment[key] = environment[key].toString().replaceAll('${PASSWORD}', password);
-		}
-	}
-
-	const server = await pteroAdmin.createServer(
-		`${game.id}-${match.id}`, // name
-		Number(env.PTERODACTYL_USER_ID), // ownerId
-		'', // description
-		0, // nestId
-		game.deployment.data.egg, // eggId
-		allocation.attributes.id, // defaultAllocationId
-		undefined, // addAllocationIds
-		environment, // environment
-		game.deployment.data.limits.cpu, // cpu
-		game.deployment.data.limits.memory, // ram
-		game.deployment.data.limits.disk, // disk
-		0, // databaseLimit
-		0, // allocationLimit
-		0, // backupLimit
-		game.deployment.data.startup, // startupCmd
-		game.deployment.data.docker_image, // dockerImage
-		game.deployment.data.limits.swap, // swap
-		game.deployment.data.limits.io, // io
-		true, // startOnCompletion
-	);
-
-	const connectionString = `steam://connect/${allocation.attributes.ip}:${
-		allocation.attributes.port
-	}${password ? '/' + password : ''}`;
-
-	await prisma.server.create({
-		data: {
-			id: server.uuid,
-			connectionString,
-			match: { connect: { id: match.id } },
-		},
-	});
-
-	return server.uuid;
 }

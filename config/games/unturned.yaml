@@ -2,19 +2,15 @@ id: unturned
 name: Unturned
 type: steam
 
-party_size: 1
-max_players: 50
-
 password: true
 
-join_regex: 'Connecting: PlayerID: ([0-9]*)'
-leave_regex: 'Disconnecting: PlayerID: ([0-9]*)'
-list_command: 'players'
-list_regex: 'PlayerID: ([0-9]*).*Ping:'
+join_regex: 'Connecting: PlayerID: (?<userId>[0-9]*)'
+leave_regex: 'Disconnecting: PlayerID: (?<userId>[0-9]*)'
 
 deployment:
   type: server
   data:
+    nest: 5
     egg: 17
     docker_image: ghcr.io/parkervcp/steamcmd:debian
     startup: './Unturned_Headless.x86_64 -batchmode -nographics -bind 0.0.0.0 -port {{SERVER_PORT}} -GSLT {{GSLT}} -Name "{{SRV_NAME}}" -Password {{SRV_PW}} +InternetServer/{{SRV_ID}}'

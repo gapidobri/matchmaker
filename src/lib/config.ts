@@ -2,14 +2,19 @@ import fs from 'fs/promises';
 import path from 'path';
 import YAML from 'yaml';
 
-interface GameConfig {
+export interface GameConfig {
 	id: string;
 	name: string;
+	type: GameType;
 	party_size: number;
 	max_players: number;
 	password?: boolean;
+	join_regex?: string;
+	leave_regex?: string;
 	deployment: Deployment;
 }
+
+export type GameType = 'steam';
 
 interface Deployment {
 	type: 'server' | 'command';
@@ -17,6 +22,7 @@ interface Deployment {
 }
 
 interface DeploymentData {
+	nest: number;
 	egg: number;
 	docker_image: string;
 	startup: string;
