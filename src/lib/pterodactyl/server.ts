@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 import { connectToWebSocket } from './websocket';
 import { getGame } from '$lib/game';
 import { pteroAdmin, pteroUser } from './client';
+import { getConfig } from '$lib/config';
 
 export async function createServer(match: Match) {
 	logger.info(`Creating server for ${match.gameId}`);
@@ -129,4 +130,31 @@ export async function deleteServer(serverId: string) {
 	await pteroAdmin.deleteServer(server.pterodactylId);
 
 	await prisma.server.delete({ where: { id: serverId } });
+}
+
+export async function sendStartGameCommand(serverId: string) {
+	logger.info(`Sending start game command to server ${serverId}`);
+
+	const server = await prisma.server.findUnique({
+		where: { id: serverId },
+		include: { match: true },
+	});
+	if (!server) {
+		logger.error(`Server with id ${serverId} not found`);
+		return;
+	}
+
+	const config = await getConfig();
+	const gameConfig = config.find((game) => game.id === server.match.gameId);
+	if (!gameConfig) {
+		logger.error(`Game with id ${server.match.gameId} not found`);
+		return;
+	}
+
+	if (!gameConfig.start_game_command) {
+		logger.error(`Game with id ${server.match.gameId} does not have a start command`);
+		return;
+	}
+
+	await pteroUser.sendCommand(server.pterodactylUuid, gameConfig.start_game_command);
 }

@@ -139,7 +139,8 @@ model Server {
 
   connectionString String?
 
-  connectedPlayers PartyMember[]
+  connectedPlayers   PartyMember[]
+  connectedPlayerIds String[]
 
   match   Match  @relation(fields: [matchId], references: [id])
   matchId String @unique

@@ -11,6 +11,8 @@ export interface GameConfig {
 	password?: boolean;
 	join_regex?: string;
 	leave_regex?: string;
+	setup_commands?: string[];
+	start_game_command?: string;
 	deployment: Deployment;
 }
 

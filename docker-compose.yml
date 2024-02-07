@@ -27,16 +27,6 @@ services:
     volumes:
       - app-db:/var/lib/postgresql/data
 
-  mqtt:
-    image: eclipse-mosquitto:2.0
-    container_name: mqtt
-    ports:
-      - 1883:1883
-      - 9001:9001
-    volumes:
-      - mqtt:/mosquitto/data
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-
   authentik-db:
     image: docker.io/library/postgres:12-alpine
     container_name: authentik-db
@@ -69,7 +59,7 @@ services:
       - authentik-redis:/data
 
   authentik-server:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.5}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.6}
     container_name: authentik-server
     restart: unless-stopped
     command: server
@@ -93,7 +83,7 @@ services:
       traefik.http.routers.authentik-server.rule: Host(`authentik.localhost`)
 
   authentik-worker:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.5}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.6}
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
