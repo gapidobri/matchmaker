@@ -10,6 +10,11 @@ max_team_size: 5
 join_regex: 'Accepting Steam Net connection.*steamid:(?<userId>[0-9]*)'
 leave_regex: 'Steam Net connection #[0-9]* UDP steamid:(?<userId>[0-9]*).*closed by peer'
 
+setup_commands:
+  - 'mp_warmuptime 999999999'
+  - 'mp_warmup_start'
+start_game_command: 'mp_warmup_end'
+
 deployment:
   type: server
   data:

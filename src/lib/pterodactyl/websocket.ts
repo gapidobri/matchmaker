@@ -3,6 +3,7 @@ import { logger } from '$lib/logger';
 import { prisma } from '$lib/prisma';
 import { pteroUser } from './client';
 import { handlePlayerConnected, handlePlayerDisconnected } from './player-events';
+import { handleServerRunning } from './server-events';
 
 export async function reconnectWebSockets() {
 	const servers = await prisma.server.findMany();
@@ -53,6 +54,15 @@ export async function connectToWebSocket(serverId: string) {
 				await handlePlayerDisconnected(result.groups.userId, serverId, game);
 				return;
 			}
+		}
+	});
+
+	socket.on('status', async (status) => {
+		logger.debug(`Server ${serverId} status: ${status}`);
+		switch (status) {
+			case 'running':
+				await handleServerRunning(serverId);
+				break;
 		}
 	});
 }
