@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 	});
 	if (!party) {
-		throw error(404, 'Party not found');
+		error(404, 'Party not found');
 	}
 
 	return { party };
@@ -28,14 +28,14 @@ export const actions: Actions = {
 
 		const name = data.get('name') as string | null;
 		if (!name) {
-			throw error(400, 'Party name is missing');
+			error(400, 'Party name is missing');
 		}
 
 		const party = await prisma.party.findFirst({
 			where: { members: { some: { userId, leader: true } } },
 		});
 		if (!party) {
-			throw error(404, 'Party not found');
+			error(404, 'Party not found');
 		}
 
 		await prisma.party.update({

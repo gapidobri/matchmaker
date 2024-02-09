@@ -10,7 +10,7 @@ export async function getPartyByUserId(userId: string, leader?: boolean) {
 	});
 
 	if (!party) {
-		throw error(404, 'Party not found');
+		error(404, 'Party not found');
 	}
 
 	return party;

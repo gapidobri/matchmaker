@@ -8,14 +8,14 @@ export const actions: Actions = {
 		const userId = await getUserId(locals);
 
 		if (await prisma.partyMember.count({ where: { userId } })) {
-			throw error(400, 'You are already in a party');
+			error(400, 'You are already in a party');
 		}
 
 		const data = await request.formData();
 
 		const name = data.get('name') as string | null;
 		if (!name) {
-			throw error(400, 'Party name is missing');
+			error(400, 'Party name is missing');
 		}
 
 		await prisma.party.create({
@@ -31,6 +31,6 @@ export const actions: Actions = {
 			},
 		});
 
-		throw redirect(301, '/');
+		redirect(301, '/');
 	},
 };
