@@ -4,6 +4,6 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!(await isAdmin(locals))) {
-		throw error(403, 'Forbidden');
+		error(403, 'Forbidden');
 	}
 };

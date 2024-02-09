@@ -57,7 +57,7 @@ export const actions: Actions = {
 
 		const code = data.get('code') as string | null;
 		if (!code) {
-			throw error(400, 'Party code is missing');
+			error(400, 'Party code is missing');
 		}
 
 		const party = await prisma.party.findUnique({ where: { code } });
@@ -104,7 +104,7 @@ export const actions: Actions = {
 
 		const joiningUserId = data.get('userId') as string | null;
 		if (!joiningUserId) {
-			throw error(400, 'User ID is missing');
+			error(400, 'User ID is missing');
 		}
 
 		// Find party where the user is leader and joining user has requested to join
@@ -115,7 +115,7 @@ export const actions: Actions = {
 			},
 		});
 		if (!party) {
-			throw error(404, 'Party not found');
+			error(404, 'Party not found');
 		}
 
 		await prisma.party.update({
@@ -139,7 +139,7 @@ export const actions: Actions = {
 
 		const joiningUserId = data.get('userId') as string | null;
 		if (!joiningUserId) {
-			throw error(400, 'User ID is missing');
+			error(400, 'User ID is missing');
 		}
 
 		const party = await prisma.party.findFirst({
@@ -149,7 +149,7 @@ export const actions: Actions = {
 			},
 		});
 		if (!party) {
-			throw error(404, 'Party not found');
+			error(404, 'Party not found');
 		}
 
 		await prisma.party.update({
@@ -170,11 +170,11 @@ export const actions: Actions = {
 
 		const memberId = data.get('userId') as string | null;
 		if (!memberId) {
-			throw error(400, 'User ID is missing');
+			error(400, 'User ID is missing');
 		}
 
 		if (userId === memberId) {
-			throw error(400, 'Cannot kick yourself');
+			error(400, 'Cannot kick yourself');
 		}
 
 		const partyMember = await prisma.partyMember.delete({
@@ -200,12 +200,12 @@ export const actions: Actions = {
 		const data = await request.formData();
 
 		const gameId = data.get('gameId') as string | null;
-		if (!gameId) throw error(400, 'Game ID is missing');
+		if (!gameId) error(400, 'Game ID is missing');
 
 		const party = await getPartyByUserId(userId, true);
 
 		const game = await getGame(gameId);
-		if (!game) throw error(404, 'Game not found');
+		if (!game) error(404, 'Game not found');
 
 		await prisma.queue.create({
 			data: {
@@ -224,7 +224,7 @@ export const actions: Actions = {
 
 		const party = await getPartyByUserId(userId, true);
 		if (!party.queue) {
-			throw error(400, 'Party is not in queue');
+			error(400, 'Party is not in queue');
 		}
 
 		await prisma.queue.delete({
