@@ -1,0 +1,37 @@
+version: '3.9'
+
+name: matchmaker-prod
+
+services:
+  app-migrate:
+    container_name: app-migrate
+    build: .
+    env_file:
+      - .env.prod
+    command: prisma migrate deploy
+
+  app:
+    container_name: app
+    restart: always
+    build: .
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./config:/app/config
+    env_file:
+      - .env.prod
+    depends_on:
+      app-migrate:
+        condition: service_completed_successfully
+
+  app-db:
+    image: postgres:16
+    container_name: app-db
+    restart: always
+    env_file:
+      - .env.prod
+    volumes:
+      - app-db:/var/lib/postgresql/data
+
+volumes:
+  app-db:

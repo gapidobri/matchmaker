@@ -1,4 +1,4 @@
-FROM oven/bun:1.0.21-debian AS base
+FROM oven/bun:1.0.26-debian AS base
 
 WORKDIR /app
 
@@ -26,13 +26,13 @@ COPY bun.lockb ./
 
 RUN bun install -p --frozen-lockfile
 
-COPY ./prisma/schema.prisma ./prisma/schema.prisma
+COPY ./prisma ./prisma
 RUN bun run prisma:generate
 
 COPY --from=build /app/build ./
 
 RUN bun install
 
-RUN rm /usr/local/bin/node
+# RUN rm /usr/local/bin/node
 
 CMD ["bun", "index.js"]
