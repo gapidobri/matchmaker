@@ -1,15 +1,15 @@
-id: cs2
-name: CS2
+id: bf3
+name: Battlefield 3
 
 min_teams: 2
 max_teams: 2
 min_team_size: 1
 max_team_size: 5
 
-join_regex: 'Accepting Steam Net connection.*steamid:(?<userId>[0-9]*)'
-leave_regex: 'Steam Net connection #[0-9]* UDP steamid:(?<userId>[0-9]*).*closed by peer'
+join_regex: '(?<userId>[0-9]*)'
+leave_regex: '(?<userId>[0-9]*)'
 
-connection_string: 'steam://connect/${HOST}:${PORT}'
+connection_string: '${HOST}:${PORT}'
 
 auto_start_game: 120
 

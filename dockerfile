@@ -19,7 +19,7 @@ COPY . .
 
 RUN bun run build
 
-FROM base AS production
+FROM base
 
 COPY package.json ./
 COPY bun.lockb ./

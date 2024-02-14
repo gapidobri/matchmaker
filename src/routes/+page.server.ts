@@ -43,9 +43,23 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 	});
 
+	const expectedPlayerCount = await prisma.partyMember.count({
+		where: {
+			team: {
+				matchId: partyMember.team?.matchId,
+			},
+		},
+	});
+
 	const games = await getConfig();
 
-	return { party, leader: partyMember.leader, games, match: partyMember.team?.match };
+	return {
+		party,
+		leader: partyMember.leader,
+		games,
+		match: partyMember.team?.match,
+		expectedPlayerCount,
+	};
 };
 
 export const actions: Actions = {
@@ -233,6 +247,26 @@ export const actions: Actions = {
 					partyId: party.id,
 					gameId: party.queue.gameId,
 				},
+			},
+		});
+
+		await emitPartyUpdate(party.id);
+	},
+
+	async leaveMatch({ locals }) {
+		const userId = await getUserId(locals);
+
+		const party = await getPartyByUserId(userId, true);
+		if (!party) {
+			error(404, 'Party not found');
+		}
+
+		await prisma.partyMember.updateMany({
+			where: {
+				partyId: party.id,
+			},
+			data: {
+				teamId: null,
 			},
 		});
 

@@ -1,19 +1,29 @@
 import type { GameConfig, GameType } from '$lib/config';
 import { emitMatchUpdate } from '$lib/events';
 import { logger } from '$lib/logger';
-import { deleteMatch } from '$lib/match';
+import { deleteMatch, startMatch } from '$lib/match';
 import { prisma } from '$lib/prisma';
-import { pteroAdmin, pteroUser } from './client';
-import { deleteServer, sendStartGameCommand } from './server';
+import { deleteServer } from './server';
 
 export async function handlePlayerConnected(userId: string, serverId: string, game: GameConfig) {
 	logger.info(`Player with id ${userId} connected to server`);
 
+	const server = await prisma.server.findUnique({
+		where: { id: serverId },
+	});
+	if (!server) {
+		logger.error(`Server with id ${serverId} not found`);
+		return;
+	}
+
 	// Temporary fix until we can get steam id from user
+	const connectedPlayers = new Set(server.connectedPlayerIds);
+	connectedPlayers.add(userId);
+
 	await prisma.server.update({
 		where: { id: serverId },
 		data: {
-			connectedPlayerIds: { push: userId },
+			connectedPlayerIds: new Array(...connectedPlayers),
 		},
 	});
 
@@ -27,6 +37,8 @@ export async function handlePlayerConnected(userId: string, serverId: string, ga
 	// 	where: { userId: user.id },
 	// 	data: { connectedServer: { connect: { id: serverId } } },
 	// });
+
+	await emitMatchUpdate(server.matchId);
 
 	await checkServerFull(serverId);
 }
@@ -62,6 +74,8 @@ export async function handlePlayerDisconnected(userId: string, serverId: string,
 	// });
 
 	await checkServerEmpty(serverId);
+
+	await emitMatchUpdate(server.matchId);
 }
 
 async function checkServerEmpty(serverId: string) {
@@ -79,11 +93,7 @@ async function checkServerEmpty(serverId: string) {
 		return;
 	}
 
-	const connectedPlayerCount = await prisma.partyMember.count({
-		where: { connectedServerId: serverId },
-	});
-
-	if (connectedPlayerCount !== 0) return;
+	if (server.connectedPlayerIds.length !== 0) return;
 
 	logger.info(`Server with id ${serverId} is empty, shutting down...`);
 
@@ -109,18 +119,11 @@ async function checkServerFull(serverId: string) {
 		},
 	});
 
-	if (server.connectedPlayerIds.length !== expectedPlayerCount) return;
+	if (server.connectedPlayerIds.length < expectedPlayerCount) return;
 
 	logger.info(`Server with id ${serverId} is full, starting match...`);
 
-	await prisma.match.update({
-		where: { id: server.matchId },
-		data: { status: 'IN_PROGRESS' },
-	});
-
-	await sendStartGameCommand(serverId);
-
-	await emitMatchUpdate(server.matchId);
+	await startMatch(server.matchId);
 }
 
 async function getUserByGameId(userId: string, gameType: GameType) {
