@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '../app.pcss';
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
