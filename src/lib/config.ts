@@ -5,18 +5,21 @@ import YAML from 'yaml';
 export interface GameConfig {
 	id: string;
 	name: string;
-	type: GameType;
 	party_size: number;
 	max_players: number;
 	password?: boolean;
 	join_regex?: string;
 	leave_regex?: string;
+	min_teams: number;
+	max_teams: number;
+	min_team_size: number;
+	max_team_size: number;
 	setup_commands?: string[];
 	start_game_command?: string;
+	connection_string: string;
+	auto_start_game?: number;
 	deployment: Deployment;
 }
-
-export type GameType = 'steam';
 
 interface Deployment {
 	type: 'server' | 'command';

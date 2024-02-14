@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { signIn, signOut } from '@auth/sveltekit/client';
 	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		const eventSource = new EventSource('/events');
+
+		eventSource.onmessage = () => {
+			invalidateAll();
+		};
+	});
 </script>
 
 {#if $page.data.session?.user}

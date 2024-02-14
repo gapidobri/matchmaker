@@ -13,11 +13,14 @@ export async function createServer(match: Match) {
 	// Get node with least servers
 	const servers = await pteroAdmin.getAllServers();
 
-	const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',').map(Number);
+	let allowedNodes: number[] | null = null;
+	if (env.PTERODACTYL_ALLOWED_NODES) {
+		allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',').map(Number);
+	}
 
 	const nodeServerCount = new Map<number, number>();
 	for (const server of servers) {
-		if (!allowedNodes.includes(server.attributes.node)) continue;
+		if (allowedNodes && !allowedNodes.includes(server.attributes.node)) continue;
 		const count = nodeServerCount.get(server.attributes.node) ?? 0;
 		nodeServerCount.set(server.attributes.node, count + 1);
 	}
@@ -72,9 +75,10 @@ export async function createServer(match: Match) {
 		true, // startOnCompletion
 	);
 
-	const connectionString = `steam://connect/${allocation.attributes.ip}:${
-		allocation.attributes.port
-	}${password ? '/' + password : ''}`;
+	const connectionString = game.connection_string
+		.replaceAll('${HOST}', allocation.attributes.ip)
+		.replaceAll('${PORT}', allocation.attributes.port.toString())
+		.replaceAll('${PASSWORD}', password ?? '');
 
 	const dbServer = await prisma.server.create({
 		data: {
@@ -88,34 +92,6 @@ export async function createServer(match: Match) {
 	await connectToWebSocket(dbServer.id);
 
 	return server.uuid;
-}
-
-export async function startServer(serverId: string) {
-	logger.info(`Starting server ${serverId}`);
-
-	let sentStart = false;
-	return new Promise<void>((resolve) => {
-		const interval = setInterval(async () => {
-			try {
-				const resources = await pteroUser.getServerResources(serverId);
-				const state = resources.current_state;
-				logger.debug(`Server ${serverId} state: ${state}`);
-				switch (state) {
-					case 'offline':
-						if (sentStart) break;
-						await pteroUser.setPowerState(serverId, 'start');
-						sentStart = true;
-						break;
-					case 'running':
-						logger.info(`Server ${serverId} started`);
-						clearInterval(interval);
-						resolve();
-				}
-			} catch (e) {
-				logger.debug(`Server ${serverId} state: installing`);
-			}
-		}, 2000);
-	});
 }
 
 export async function deleteServer(serverId: string) {

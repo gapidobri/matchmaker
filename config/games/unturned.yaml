@@ -1,11 +1,17 @@
 id: unturned
 name: Unturned
-type: steam
 
-password: true
+min_teams: 1
+max_teams: 1
+min_team_size: 1
+max_team_size: 9999
 
 join_regex: 'Connecting: PlayerID: (?<userId>[0-9]*)'
 leave_regex: 'Disconnecting: PlayerID: (?<userId>[0-9]*)'
+
+password: true
+
+connection_string: 'steam://connect/${HOST}:${PORT}/${PASSWORD}'
 
 deployment:
   type: server
@@ -21,8 +27,8 @@ deployment:
       io: 500
       cpu: 0
     environment:
-      SRV_NAME: Unturned Server
-      SRV_ID: UnturnedServer
+      SRV_NAME: FriLAN Unturned
+      SRV_ID: FriLANUnturned
       SRCDS_APPID: '1110390'
       GSLT: 905135FFDC753D2F7510693AE253F637
       LD_LIBRARY_PATH: ./Unturned_Headless_Data/Plugins/x86_64/

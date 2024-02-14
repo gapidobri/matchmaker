@@ -104,18 +104,18 @@ services:
       - authentik-db
       - authentik-redis
 
-  steam-oidc-proxy:
-    image: ghcr.io/gapidobri/steam-openid-connect-provider:master
-    container_name: steam-oidc-proxy
-    environment:
-      OpenID__RedirectUri: 'http://authentik.localhost/source/oauth/callback/steam/'
-      OpenID__ClientID: 'matchmaker'
-      OpenID__ClientSecret: 'matchmaker'
-      OpenID__ClientName: 'matchmaker'
-      Steam__ApplicationKey: '831BD493725A19F97AC66571A8553392'
-    labels:
-      traefik.http.routers.steam-oidc-proxy.rule: Host(`steam-oidc-proxy.localhost`)
-      traefik.http.routers.steam-oidc-proxy.tls: ''
+  # steam-oidc-proxy:
+  #   image: ghcr.io/gapidobri/steam-openid-connect-provider:master
+  #   container_name: steam-oidc-proxy
+  #   environment:
+  #     OpenID__RedirectUri: 'http://authentik.localhost/source/oauth/callback/steam/'
+  #     OpenID__ClientID: 'matchmaker'
+  #     OpenID__ClientSecret: 'matchmaker'
+  #     OpenID__ClientName: 'matchmaker'
+  #     Steam__ApplicationKey: '831BD493725A19F97AC66571A8553392'
+  #   labels:
+  #     traefik.http.routers.steam-oidc-proxy.rule: Host(`steam-oidc-proxy.localhost`)
+  #     traefik.http.routers.steam-oidc-proxy.tls: ''
 
 volumes:
   app-db:

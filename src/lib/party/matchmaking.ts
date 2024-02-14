@@ -1,7 +1,8 @@
 import { emitMatchUpdate } from '$lib/events';
+import { getGame } from '$lib/game';
 import { logger } from '$lib/logger';
 import { prisma } from '$lib/prisma';
-import { createServer, startServer } from '$lib/pterodactyl/server';
+import { createServer } from '$lib/pterodactyl/server';
 import type { Party, PartyMember } from '@prisma/client';
 
 export async function processQueues(gameId: string) {
@@ -30,20 +31,7 @@ export async function processQueues(gameId: string) {
 
 	await emitMatchUpdate(match.id);
 
-	// Create game server / run commands
-	const serverId = await createServer(match);
-
-	await startServer(serverId);
-
-	await prisma.match.update({
-		where: { id: match.id },
-		data: { status: 'WAIT_FOR_JOIN' },
-	});
-
-	await emitMatchUpdate(match.id);
-
-	// Invite players to match
-	// Start match
+	await createServer(match);
 }
 
 export async function createTeams(gameId: string) {
@@ -53,13 +41,11 @@ export async function createTeams(gameId: string) {
 		orderBy: { queue: { createdAt: 'desc' } },
 	});
 
-	// TODO: Get from config
-	const config = {
-		minTeams: 2,
-		maxTeams: 4,
-		minTeamSize: 2,
-		maxTeamSize: 4,
-	};
+	const config = await getGame(gameId);
+	if (!config) {
+		logger.error(`Game ${gameId} not found`);
+		return { teams: [], parties: [] };
+	}
 
 	// TODO: Check minTeams and maxTeams, don't split same party into multiple games
 
@@ -67,12 +53,14 @@ export async function createTeams(gameId: string) {
 	const usedParties: Party[] = [];
 
 	for (const party of parties) {
-		if (party.members.length > config.maxTeamSize) {
-			const teamCount = party.members.length / config.maxTeamSize;
+		// Split one party into multiple teams
+		if (party.members.length > config?.max_team_size) {
+			const teamCount = party.members.length / config.max_team_size;
 			const newTeams: PartyMember[][] = Array.from({ length: teamCount }, () => []);
 
 			party.members.forEach((member, i) => {
-				newTeams[i % teamCount].push(member);
+				const teamIndex = Math.floor(i / teamCount);
+				newTeams[teamIndex].push(member);
 			});
 
 			teams.push(...newTeams);
@@ -80,10 +68,11 @@ export async function createTeams(gameId: string) {
 			continue;
 		}
 
-		if (party.members.length < config.minTeamSize) {
+		// Join two parties
+		if (party.members.length < config.min_team_size) {
 			parties.splice(parties.indexOf(party), 1);
 			usedParties.push(party);
-			let remaining = config.maxTeamSize - party.members.length;
+			let remaining = config.max_team_size - party.members.length;
 			const team = party.members;
 			for (const party of parties) {
 				if (remaining === 0) break;
@@ -95,7 +84,7 @@ export async function createTeams(gameId: string) {
 				}
 			}
 
-			if (team.length >= config.minTeamSize) {
+			if (team.length >= config.min_team_size) {
 				teams.push(team);
 				usedParties.push(party);
 			}
@@ -104,6 +93,14 @@ export async function createTeams(gameId: string) {
 
 		teams.push(party.members);
 		usedParties.push(party);
+
+		if (teams.length >= config.max_teams) {
+			break;
+		}
+	}
+
+	if (teams.length < config.min_teams) {
+		return { teams: [], parties: [] };
 	}
 
 	return { teams, parties: usedParties };

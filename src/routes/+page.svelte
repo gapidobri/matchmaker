@@ -1,19 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
-	import { invalidateAll } from '$app/navigation';
 
 	export let data: PageData;
 	export let form: ActionData;
-
-	onMount(() => {
-		const eventSource = new EventSource('/events');
-
-		eventSource.onmessage = () => {
-			invalidateAll();
-		};
-	});
 </script>
 
 <form method="post" use:enhance>
@@ -54,14 +44,26 @@
 			{/each}
 
 			<hr />
-
-			{#if data.match}
-				<h2>In match {data.match.id}</h2>
-				<p>Status: {data.match.status}</p>
-				{#if data.match.status === 'WAIT_FOR_JOIN'}
-					<a href={data.match.server?.connectionString}>{data.match.server?.connectionString}</a>
-				{/if}
-			{:else if !data.party.queue}
+		{/if}
+		{#if data.match}
+			<h2>In match {data.match.id}</h2>
+			<p>Status: {data.match.status}</p>
+			{#if data.match.server}
+				<p>
+					Players connected: {data.match.server?.connectedPlayerIds
+						.length}/{data.expectedPlayerCount}
+				</p>
+			{/if}
+			{#if data.match.status !== 'CREATING'}
+				<a href={data.match.server?.connectionString}>{data.match.server?.connectionString}</a>
+			{/if}
+			{#if data.leader}
+				<br />
+				<br />
+				<button type="submit" formaction="?/leaveMatch">Leave Match</button>
+			{/if}
+		{:else if !data.party.queue}
+			{#if data.leader}
 				<h2>Select Game Queue</h2>
 				{#each data.games as game}
 					<div>
@@ -71,8 +73,10 @@
 				{/each}
 				<br />
 				<button type="submit" formaction="?/joinQueue">Join Queue</button>
-			{:else}
-				<h2>Queued for {data.party.queue.gameId}</h2>
+			{/if}
+		{:else}
+			<h2>Queued for {data.party.queue.gameId}</h2>
+			{#if data.leader}
 				<button type="submit" formaction="?/leaveQueue">Leave Queue</button>
 			{/if}
 		{/if}
