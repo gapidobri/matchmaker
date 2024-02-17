@@ -139,6 +139,10 @@ model Server {
 
   connectionString String?
 
+  host     String
+  port     Int
+  password String?
+
   connectedPlayers   PartyMember[]
   connectedPlayerIds String[]
 

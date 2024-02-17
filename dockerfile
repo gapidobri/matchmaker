@@ -33,6 +33,4 @@ COPY --from=build /app/build ./
 
 RUN bun install
 
-# RUN rm /usr/local/bin/node
-
 CMD ["bun", "index.js"]

@@ -75,15 +75,21 @@ export async function createServer(match: Match) {
 		true, // startOnCompletion
 	);
 
-	const connectionString = game.connection_string
-		.replaceAll('${HOST}', allocation.attributes.ip)
-		.replaceAll('${PORT}', allocation.attributes.port.toString())
-		.replaceAll('${PASSWORD}', password ?? '');
+	let connectionString: string | undefined;
+	if (game.connection_string) {
+		connectionString = game.connection_string
+			.replaceAll('${HOST}', allocation.attributes.ip)
+			.replaceAll('${PORT}', allocation.attributes.port.toString())
+			.replaceAll('${PASSWORD}', password ?? '');
+	}
 
 	const dbServer = await prisma.server.create({
 		data: {
 			pterodactylId: server.id,
 			pterodactylUuid: server.uuid,
+			host: allocation.attributes.ip,
+			port: allocation.attributes.port,
+			password,
 			connectionString,
 			match: { connect: { id: match.id } },
 		},

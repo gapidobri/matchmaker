@@ -16,7 +16,7 @@ export interface GameConfig {
 	max_team_size: number;
 	setup_commands?: string[];
 	start_game_command?: string;
-	connection_string: string;
+	connection_string?: string;
 	auto_start_game?: number;
 	deployment: Deployment;
 }

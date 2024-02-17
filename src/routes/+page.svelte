@@ -6,6 +6,8 @@
 	export let form: ActionData;
 </script>
 
+
+
 <form method="post" use:enhance>
 	{#if !data.party}
 		<a href="/party/create">Create Party</a>
@@ -50,12 +52,20 @@
 			<p>Status: {data.match.status}</p>
 			{#if data.match.server}
 				<p>
-					Players connected: {data.match.server?.connectedPlayerIds
+					Players connected: {data.match.server.connectedPlayerIds
 						.length}/{data.expectedPlayerCount}
 				</p>
+				{#if data.match.status !== 'CREATING'}
+				{#if data.match.server.connectionString}
+					<a href={data.match.server.connectionString}>{data.match.server?.connectionString}</a>
+				{:else}
+					<p>IP: {data.match.server.host}</p>
+					<p>Port: {data.match.server.port}</p>
+					{#if data.match.server.password}
+						<p>Password: {data.match.server.password}</p>
+					{/if}
+				{/if}
 			{/if}
-			{#if data.match.status !== 'CREATING'}
-				<a href={data.match.server?.connectionString}>{data.match.server?.connectionString}</a>
 			{/if}
 			{#if data.leader}
 				<br />

@@ -1,0 +1,20 @@
+id: bf2
+name: Battlefield 2
+
+password: true
+
+deployment:
+  type: server
+  data:
+    nest: 5
+    egg: 17
+    docker_image: cr.aerio.cloud/frilan/bf-2:latest
+    startup: './start.sh +port {{SERVER_PORT}}'
+    limits:
+      memory: 0
+      swap: 0
+      disk: 0
+      io: 500
+      cpu: 0
+    environment:
+      PASSWORD: '${PASSWORD}'
