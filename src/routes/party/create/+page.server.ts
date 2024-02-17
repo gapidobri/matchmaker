@@ -15,7 +15,7 @@ export const actions: Actions = {
 
 		const name = data.get('name') as string | null;
 		if (!name) {
-			error(400, 'Party name is missing');
+			return {message: 'Name is required'};
 		}
 
 		await prisma.party.create({

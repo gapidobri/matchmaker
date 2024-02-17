@@ -1,16 +1,21 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
 	import type { ActionData } from './$types';
+
+	export let form: ActionData;
 </script>
 
-<a href="/">Home</a>
 
-<h1>Create Party</h1>
+<div class="h-full flex flex-col items-center justify-center" >
+	<form class="border-2 border-primary h-32 w-64 flex flex-col items-center justify-center space-y-2" action="?/createParty" method="post" use:enhance>
+		<span>Create party</span>
+		<input type="text" name="name" id="name" placeholder="name" class="bg-transparent border-2 text-center select-none focus:outline-none border-primary" />
+		<div class="w-full flex justify-center space-x-4">
+			<button class="hover:underline" type="submit">create</button>
+			<a class="hover:underline" href="/">back</a>
+		</div>
+	</form>
 
-<form action="?/createParty" method="post" use:enhance>
-	<label for="name">Name</label>
-	<input type="text" name="name" id="name" />
-	<br />
-	<br />
-	<button type="submit">Create</button>
-</form>
+	<span class="mt-4 h-4 text-[#f00]">{form?.message ?? ''}</span>
+</div>
