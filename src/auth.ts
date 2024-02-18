@@ -15,9 +15,9 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 			clientId: env.OIDC_CLIENT_ID,
 			clientSecret: env.OIDC_CLIENT_SECRET,
 			issuer: env.OIDC_ISSUER,
-			authorization: env.EXTERNAL_AUTH_URL
-				? `${env.EXTERNAL_AUTH_URL}/application/o/authorize/`
-				: undefined,
+			// authorization: env.EXTERNAL_AUTH_URL
+			// 	? `${env.EXTERNAL_AUTH_URL}/application/o/authorize/`
+			// 	: undefined,
 			profile: (profile) => ({
 				id: profile.sub,
 				email: profile.email,

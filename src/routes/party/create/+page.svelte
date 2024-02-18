@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
 	import type { ActionData } from './$types';
 
 	export let form: ActionData;
@@ -10,10 +9,10 @@
 <div class="h-full flex flex-col items-center justify-center" >
 	<form class="border-2 border-primary h-32 w-64 flex flex-col items-center justify-center space-y-2" action="?/createParty" method="post" use:enhance>
 		<span>Create party</span>
-		<input type="text" name="name" id="name" placeholder="name" class="bg-transparent border-2 text-center select-none focus:outline-none border-primary" />
+		<input type="text" name="name" id="name" placeholder="Name" class="bg-transparent border-2 text-center select-none focus:outline-none border-primary" />
 		<div class="w-full flex justify-center space-x-4">
-			<button class="hover:underline" type="submit">create</button>
-			<a class="hover:underline" href="/">back</a>
+			<a class="hover:underline" href="/">Back</a>
+			<button class="hover:underline" type="submit">Create</button>
 		</div>
 	</form>
 

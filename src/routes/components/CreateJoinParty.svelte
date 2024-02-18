@@ -1,5 +1,6 @@
 <script lang="ts">
   export let message = '';
+  export let success = false;
 </script>
 
 <div class="h-full flex flex-col items-center justify-center">
@@ -16,5 +17,5 @@
     </div>
   </div>
 
-  <span class="mt-4 h-4 text-[#f00]">{message ?? ''}</span>
+  <span class="mt-4 h-4 text-[#f00]" class:text-primary={success}>{message ?? ''}</span>
 </div>

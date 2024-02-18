@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { env } from "$env/dynamic/public";
   import type { User } from "@auth/core/types";
 	import { signOut } from "@auth/sveltekit/client";
 
@@ -10,7 +11,7 @@
     <span class="text-[#ff0000] font-bold">Fri</span><span class="text-white">LAN</span>
   </a>
   <div class="grow" />
-  <a href="http://authentik.localhost/if/user/#/settings">{user.name}</a>
+  <a href="{env.PUBLIC_AUTH_URL}/if/user/#/settings">{user.name}</a>
   {#if user.groups.includes('admin')}
     <span class="ml-2">(<a href="/admin">admin</a>)</span>
   {/if}
