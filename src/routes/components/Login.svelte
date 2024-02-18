@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { signIn } from "@auth/sveltekit/client";
+	import { signIn } from '@auth/sveltekit/client';
 </script>
 
 <div class="flex flex-col items-center justify-center h-full">
