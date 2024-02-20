@@ -1,5 +1,6 @@
 id: unturned
 name: Unturned
+enabled: true
 
 min_teams: 1
 max_teams: 1

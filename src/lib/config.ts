@@ -5,6 +5,7 @@ import YAML from 'yaml';
 export interface GameConfig {
 	id: string;
 	name: string;
+	enabled?: boolean;
 	party_size: number;
 	max_players: number;
 	password?: boolean;
@@ -50,7 +51,9 @@ export async function getConfig(): Promise<GameConfig[]> {
 	for (const fileName of configDir) {
 		const configString = await fs.readFile(path.join(configPath, fileName));
 		const config: GameConfig = YAML.parse(configString.toString());
-		configs.push(config);
+		if (config.enabled === true) {
+			configs.push(config);
+		}
 	}
 
 	return configs;
