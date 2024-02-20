@@ -16,11 +16,10 @@
 </script>
 
 <div class="flex flex-col bg-black font-mono h-screen w-screen text-primary border-primary">
-	{#if $page.data.session?.user}
+	{#if $page.data.session}
 		<Navbar user={$page.data.session.user} />
 		<slot />
 	{:else}
 		<Login />
 	{/if}
 </div>
-
