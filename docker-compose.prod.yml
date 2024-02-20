@@ -9,6 +9,9 @@ services:
     env_file:
       - .env.prod
     command: prisma migrate deploy
+    depends_on:
+      app-db:
+        condition: service_started_successfully
 
   app:
     container_name: app
@@ -21,6 +24,8 @@ services:
     env_file:
       - .env.prod
     depends_on:
+      app-db:
+        condition: service_started_successfully
       app-migrate:
         condition: service_completed_successfully
 
