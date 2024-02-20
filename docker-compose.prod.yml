@@ -23,6 +23,11 @@ services:
       - ./config:/app/config
     env_file:
       - .env.prod
+    healthcheck:
+      test: curl -f http://localhost:3000
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       app-db:
         condition: service_healthy
@@ -35,7 +40,7 @@ services:
     env_file:
       - .env.prod
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: ['CMD-SHELL', 'pg_isready']
       interval: 10s
       timeout: 5s
       retries: 5
