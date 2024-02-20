@@ -1,7 +1,14 @@
 import { prisma } from '$lib/prisma';
 import { error, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { getUserId } from '$lib/auth';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	const userId = await getUserId(locals);
+	if (await prisma.partyMember.count({ where: { userId } })) {
+		redirect(301, '/');
+	}
+};
 
 export const actions: Actions = {
 	async createParty({ request, locals }) {
@@ -15,7 +22,7 @@ export const actions: Actions = {
 
 		const name = data.get('name') as string | null;
 		if (!name) {
-			error(400, 'Party name is missing');
+			return {message: 'Name is required'};
 		}
 
 		await prisma.party.create({

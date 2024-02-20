@@ -84,7 +84,9 @@ export const actions: Actions = {
 			data: { joinRequests: { connect: { id: userId } } },
 		});
 
-		emitPartyUpdate(party.id);
+		await emitPartyUpdate(party.id);
+
+		return {success: true, message: 'Join request sent'};
 	},
 
 	// leaveParty removes a user from a party

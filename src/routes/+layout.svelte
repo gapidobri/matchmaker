@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { signIn, signOut } from '@auth/sveltekit/client';
+	import '../app.pcss';
 	import { page } from '$app/stores';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import Login from './components/Login.svelte';
+	import Navbar from './components/Navbar.svelte';
 
 	onMount(() => {
 		const eventSource = new EventSource('/events');
@@ -13,21 +15,12 @@
 	});
 </script>
 
-{#if $page.data.session?.user}
-	<button on:click={() => signOut()}>Sign out</button>
-	<span>Signed in as {$page.data.session.user.email}</span>
-	{#if $page.data.session.user.steamId}
-		[steamId: {$page.data.session.user.steamId}]
+<div class="flex flex-col bg-black font-mono h-screen w-screen text-primary border-primary">
+	{#if $page.data.session?.user}
+		<Navbar user={$page.data.session.user} />
+		<slot />
+	{:else}
+		<Login />
 	{/if}
-	{#if $page.data.session.user.groups.includes('admin')}
-		(<a href="/admin">admin</a>)
-	{/if}
-{:else}
-	<button on:click={() => signIn('authentik')}>Sign in</button>
-	<span>Not signed in.</span>
-{/if}
+</div>
 
-<br />
-<br />
-
-<slot />
