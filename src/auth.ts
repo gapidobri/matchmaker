@@ -10,6 +10,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 	session: {
 		strategy: 'jwt',
 	},
+	debug: true,
 	providers: [
 		Authentik({
 			clientId: env.OIDC_CLIENT_ID,

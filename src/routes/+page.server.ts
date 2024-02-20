@@ -5,7 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { emitPartyUpdate } from '$lib/events';
 import { getConfig } from '$lib/config';
 import { getGame } from '$lib/game';
-import { getPartyByUserId } from '$lib/party/party';
+import { getPartyByUserId, leaveParty } from '$lib/party/party';
 import { processQueues } from '$lib/party/matchmaking';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -86,30 +86,13 @@ export const actions: Actions = {
 
 		await emitPartyUpdate(party.id);
 
-		return {success: true, message: 'Join request sent'};
+		return { success: true, message: 'Join request sent' };
 	},
 
 	// leaveParty removes a user from a party
 	async leaveParty({ locals }) {
 		const userId = await getUserId(locals);
-
-		const { partyId } = await prisma.partyMember.delete({
-			where: { userId },
-		});
-
-		const newLeader = await prisma.partyMember.findFirst({
-			where: { partyId },
-		});
-		if (!newLeader) {
-			await prisma.party.delete({ where: { id: partyId } });
-			return;
-		}
-		await prisma.partyMember.update({
-			where: newLeader,
-			data: { leader: true },
-		});
-
-		emitPartyUpdate(partyId);
+		await leaveParty(userId);
 	},
 
 	// acceptJoin accepts a join request from a user
