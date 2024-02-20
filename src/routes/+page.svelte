@@ -8,9 +8,19 @@
 	import SelectGame from './components/SelectGame.svelte';
 	import Queued from './components/Queued.svelte';
 	import MatchInfo from './components/MatchInfo.svelte';
+	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
+
+	onMount(() => {
+		const eventSource = new EventSource('/events');
+
+		eventSource.onmessage = () => {
+			invalidateAll();
+		};
+	});
 </script>
 
 <form class="p-4 w-full h-full" method="post" use:enhance>
@@ -44,5 +54,3 @@
 		</div>
 	{/if}
 </form>
-
-<br />
