@@ -4,8 +4,8 @@ name: matchmaker-prod
 
 services:
   app-migrate:
-    container_name: app-migrate
     build: .
+    image: gcr.si/frilan/dev/matchmaker:latest
     env_file:
       - .env.prod
     command: prisma migrate deploy
@@ -14,9 +14,9 @@ services:
         condition: service_started_successfully
 
   app:
-    container_name: app
     restart: always
     build: .
+    image: gcr.si/frilan/dev/matchmaker:latest
     ports:
       - '3000:3000'
     volumes:
@@ -31,7 +31,6 @@ services:
 
   app-db:
     image: postgres:16
-    container_name: app-db
     restart: always
     env_file:
       - .env.prod
