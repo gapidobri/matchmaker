@@ -1,36 +1,28 @@
-FROM oven/bun:1.0.26-debian AS base
+FROM node:18 AS build
 
 WORKDIR /app
 
-COPY --from=node:18 /usr/local/bin/node /usr/local/bin/node
+COPY package.json package-lock.json ./
 
-FROM base AS build
-
-COPY package.json ./
-COPY bun.lockb ./
-
-RUN bun install --frozen-lockfile
+RUN npm ci
 
 COPY ./prisma/schema.prisma ./prisma/schema.prisma
 
-RUN bun run prisma:generate
+RUN npm run prisma:generate
 
 COPY . .
 
-RUN bun run build
+RUN npm run build
 
-FROM base
+FROM node:18
 
-COPY package.json ./
-COPY bun.lockb ./
+WORKDIR /app
 
-RUN bun install -p --frozen-lockfile
-
+COPY ./package.json ./package-lock.json ./
 COPY ./prisma ./prisma
-RUN bun run prisma:generate
 
 COPY --from=build /app/build ./
 
-RUN bun install
+RUN npm i --production
 
-CMD ["bun", "index.js"]
+CMD [ "node", "index.js" ]
