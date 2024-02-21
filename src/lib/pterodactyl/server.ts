@@ -25,7 +25,10 @@ export async function createServer(match: Match) {
 		nodeServerCount.set(server.attributes.node, count + 1);
 	}
 
-	// TODO: Get allowed nodes from config
+	if (nodeServerCount.size === 0) {
+		throw new Error('No nodes available');
+	}
+
 	const nodeId = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1])[0][0];
 
 	// Get free allocation

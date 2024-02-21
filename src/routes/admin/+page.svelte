@@ -12,7 +12,7 @@
 			<th class="px-2">ID</th>
 			<th class="px-2">Name</th>
 			<th class="px-2">Invite Code</th>
-			<th class="px-2">Queue Game ID</th>
+			<th class="px-2">Queue</th>
 		</thead>
 		<tbody>
 			{#each data.parties as party}
