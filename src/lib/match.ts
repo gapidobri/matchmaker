@@ -1,7 +1,9 @@
 import { prisma } from '$lib/prisma';
+import { error } from '@sveltejs/kit';
 import { emitMatchUpdate, emitUserUpdate } from './events';
 import { logger } from './logger';
 import { sendStartGameCommand } from './pterodactyl/server';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export async function startMatch(matchId: string) {
 	logger.info(`Starting match ${matchId}`);
@@ -38,12 +40,21 @@ export async function startMatch(matchId: string) {
 export async function deleteMatch(matchId: string) {
 	logger.info(`Deleting match ${matchId}`);
 
-	const match = await prisma.match.delete({
-		where: { id: matchId },
-		include: { teams: { include: { players: true } } },
-	});
+	try {
+		const match = await prisma.match.delete({
+			where: { id: matchId },
+			include: { teams: { include: { players: true } } },
+		});
 
-	await emitUserUpdate(
-		...match.teams.flatMap((team) => team.players.map((player) => player.userId)),
-	);
+		await emitUserUpdate(
+			...match.teams.flatMap((team) => team.players.map((player) => player.userId)),
+		);
+	} catch (e) {
+		if (e instanceof PrismaClientKnownRequestError) {
+			if (e.code === 'P2003') {
+				logger.error('Match has a server, delete the server first');
+				error(400, 'Match has a server, delete the server first');
+			}
+		}
+	}
 }

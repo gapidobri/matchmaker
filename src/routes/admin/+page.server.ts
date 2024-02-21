@@ -16,7 +16,9 @@ export const load: PageServerLoad = async () => {
 				server: true,
 			},
 		}),
-		prisma.server.findMany(),
+		prisma.server.findMany({
+			include: { match: { select: { gameId: true } } },
+		}),
 	]);
 
 	return { parties, matches, servers };

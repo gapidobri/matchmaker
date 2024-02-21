@@ -20,7 +20,7 @@
 					<td class="px-2">{party.id}</td>
 					<td class="px-2">{party.name}</td>
 					<td class="px-2">{party.code}</td>
-					<td class="px-2">{party.queue?.gameId}</td>
+					<td class="px-2">{party.queue?.gameId ?? 'Not in queue'}</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -73,6 +73,7 @@
 			<th class="px-2">Host</th>
 			<th class="px-2">Port</th>
 			<th class="px-2">Password</th>
+			<th class="px-2">Game ID</th>
 			<th class="px-2">Actions</th>
 		</thead>
 		<tbody>
@@ -84,6 +85,7 @@
 					<td class="px-2">{server.host}</td>
 					<td class="px-2">{server.port}</td>
 					<td class="px-2">{server.password}</td>
+					<td class="px-2">{server.match.gameId}</td>
 					<td class="px-2">
 						<form method="post" use:enhance>
 							<input type="hidden" name="serverId" value={server.id} />
