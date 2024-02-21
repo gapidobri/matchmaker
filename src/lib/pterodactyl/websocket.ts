@@ -1,6 +1,7 @@
 import { getGame } from '$lib/game';
 import { logger } from '$lib/logger';
 import { prisma } from '$lib/prisma';
+import type { WebsocketClient } from 'jspteroapi/dist/client/Websocket';
 import { pteroUser } from './client';
 import { handlePlayerConnected, handlePlayerDisconnected } from './player-events';
 import { handleServerRunning } from './server-events';
@@ -33,7 +34,13 @@ export async function connectToWebSocket(serverId: string) {
 		return;
 	}
 
-	const socket = await pteroUser.startConsoleConnection(server.pterodactylUuid);
+	let socket: WebsocketClient;
+	try {
+		socket = await pteroUser.startConsoleConnection(server.pterodactylUuid);
+	} catch (e) {
+		logger.error(`Failed to connect to server console`, e);
+		return;
+	}
 
 	logger.info('Connected to server console', serverId);
 
