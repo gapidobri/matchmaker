@@ -7,6 +7,7 @@ import { getConfig } from '$lib/config';
 import { getGame } from '$lib/game';
 import { getPartyByUserId, leaveParty } from '$lib/party/party';
 import { processQueues } from '$lib/party/matchmaking';
+import { cleanupTeams } from '$lib/team';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const userId = await getUserId(locals);
@@ -247,13 +248,11 @@ export const actions: Actions = {
 		}
 
 		await prisma.partyMember.updateMany({
-			where: {
-				partyId: party.id,
-			},
-			data: {
-				teamId: null,
-			},
+			where: { partyId: party.id },
+			data: { teamId: null },
 		});
+
+		await cleanupTeams();
 
 		await emitPartyUpdate(party.id);
 	},

@@ -7,10 +7,8 @@ import { env } from '$env/dynamic/private';
 export const { handle, signIn, signOut } = SvelteKitAuth({
 	trustHost: true,
 	adapter: PrismaAdapter(prisma),
-	session: {
-		strategy: 'jwt',
-	},
-	debug: true,
+	session: { strategy: 'jwt' },
+	debug: !env.NODE_ENV || env.NODE_ENV === 'development',
 	providers: [
 		Authentik({
 			clientId: env.OIDC_CLIENT_ID,
