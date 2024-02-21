@@ -14,15 +14,15 @@ COPY . .
 
 RUN npm run build
 
-FROM node:18
+FROM node:18 AS prod
 
 WORKDIR /app
 
-COPY ./package.json ./package-lock.json ./
+COPY ./package.json ./
 COPY ./prisma ./prisma
 
 COPY --from=build /app/build ./
 
-RUN npm install --production
+RUN npm install --omit=dev
 
 CMD [ "node", "index.js" ]

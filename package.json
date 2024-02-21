@@ -34,9 +34,6 @@
 		"tslog": "^4.9.2",
 		"yaml": "^2.3.4"
 	},
-	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.12.1"
-	},
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -51,5 +48,8 @@
 		"start": "node -r dotenv/config build"
 	},
 	"type": "module",
-	"module": "index.ts"
+	"module": "index.ts",
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "^4.12.0"
+	}
 }
