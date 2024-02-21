@@ -35,7 +35,7 @@
 		"yaml": "^2.3.4"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "4.12.1"
+		"@rollup/rollup-linux-x64-gnu": "^4.12.1"
 	},
 	"private": true,
 	"scripts": {

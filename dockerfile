@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN npm install
 
 COPY ./prisma/schema.prisma ./prisma/schema.prisma
 
@@ -23,6 +23,6 @@ COPY ./prisma ./prisma
 
 COPY --from=build /app/build ./
 
-RUN npm i --production
+RUN npm install --production
 
 CMD [ "node", "index.js" ]
