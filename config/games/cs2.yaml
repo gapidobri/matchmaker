@@ -1,6 +1,6 @@
 id: cs2
 name: CS2
-enabled: true
+enabled: false
 
 min_teams: 2
 max_teams: 2

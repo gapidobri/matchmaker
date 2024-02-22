@@ -13,6 +13,16 @@ export async function createServer(match: Match) {
 	// Get node with least servers
 	const servers = await pteroAdmin.getAllServers();
 	const nodes = await pteroAdmin.getAllNodes();
+
+	if (env.PTERODACTYL_ALLOWED_NODES) {
+		const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',');
+		for (const node of nodes) {
+			if (!allowedNodes.includes(node.attributes.id.toString())) {
+				nodes.splice(nodes.indexOf(node), 1);
+			}
+		}
+	}
+
 	if (nodes.length === 0) {
 		throw new Error('No nodes available');
 	}
@@ -24,6 +34,7 @@ export async function createServer(match: Match) {
 	}
 
 	for (const server of servers) {
+		if (!nodeServerCount.has(server.attributes.node)) continue;
 		const count = nodeServerCount.get(server.attributes.node) ?? 0;
 		nodeServerCount.set(server.attributes.node, count + 1);
 	}
