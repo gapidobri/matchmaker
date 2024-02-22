@@ -14,14 +14,14 @@ export async function createServer(match: Match) {
 	const servers = await pteroAdmin.getAllServers();
 	const nodes = await pteroAdmin.getAllNodes();
 
-	if (env.PTERODACTYL_ALLOWED_NODES) {
-		const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',');
-		for (const node of nodes) {
-			if (!allowedNodes.includes(node.attributes.id.toString())) {
-				nodes.splice(nodes.indexOf(node), 1);
-			}
-		}
-	}
+	// if (env.PTERODACTYL_ALLOWED_NODES) {
+	// 	const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',');
+	// 	for (const node of nodes) {
+	// 		if (!allowedNodes.includes(node.attributes.id.toString())) {
+	// 			nodes.splice(nodes.indexOf(node), 1);
+	// 		}
+	// 	}
+	// }
 
 	if (nodes.length === 0) {
 		throw new Error('No nodes available');
@@ -39,7 +39,13 @@ export async function createServer(match: Match) {
 		nodeServerCount.set(server.attributes.node, count + 1);
 	}
 
-	const nodeId = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1])[0][0];
+	const sortedNodes = [...nodeServerCount.entries()].sort((a, b) => a[1] - b[1]);
+
+	const leastServers = sortedNodes[0][1];
+
+	const availableNodes = sortedNodes.filter((n) => n[1] === leastServers);
+
+	const nodeId = availableNodes[Math.floor(Math.random() * availableNodes.length)][0];
 
 	// Get free allocation
 	const allocations = await pteroAdmin.getAllAllocations(nodeId);
