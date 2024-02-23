@@ -27,7 +27,7 @@
 	</p>
 	{#if match.status !== 'CREATING'}
 		{#if match.server.connectionString}
-			<a class="text-green-500" href={match.server.connectionString}>Connect to server</a>
+			<a class="text-emerald-400" href={match.server.connectionString}>Connect to server</a>
 		{:else}
 			<p>IP: {match.server.host}</p>
 			<p>Port: {match.server.port}</p>

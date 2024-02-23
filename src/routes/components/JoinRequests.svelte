@@ -13,7 +13,9 @@
 			<span class="font-bold">{request.name}</span>
 			<div class="grow" />
 			<div class="mr-2">
-				<button class="hover:underline" type="submit" formaction="?/acceptJoin">✔</button>
+				<button class="text-emerald-400 hover:underline" type="submit" formaction="?/acceptJoin">
+					✔
+				</button>
 				<button class="text-error-red hover:underline" type="submit" formaction="?/declineJoin">
 					✘
 				</button>
