@@ -6,7 +6,7 @@
 	export let user: User;
 </script>
 
-<div class="w-full flex items-center p-1">
+<div class="w-full flex items-center p-1 pr-4">
 	<a href="/" class="text-3xl text-primary">FriLAN</a>
 	<div class="grow" />
 	<a href="{env.PUBLIC_AUTH_URL}/if/user/#/settings">{user.name}</a>
