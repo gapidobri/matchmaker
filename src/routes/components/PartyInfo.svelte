@@ -26,20 +26,22 @@
 
 	<div class="flex flex-col max-h-[30vh] overflow-y-auto scroll">
 		{#each members as member}
-			<form class="flex gap-1 hover:bg-offblack-d" method="post" use:enhance>
-				<span>{member.user.name}</span>
-				{#if member.leader}
-					<span class="text-primary">[<span class="text-white">leader</span>]</span>
-				{/if}
-				{#if you?.user.id === member.user.id}
-					<span class="text-primary">[<span class="text-emerald-400">you</span>]</span>
-				{/if}
-				<div class="grow" />
-				{#if leader && !member.leader}
-					<button class="text-error-red hover:underline" type="submit" formaction="?/kickMember">
-						Kick
-					</button>
-				{/if}
+			<form method="post" use:enhance>
+				<div class="flex gap-1 hover:bg-offblack-d">
+					<span>{member.user.name}</span>
+					{#if member.leader}
+						<span class="text-primary">[<span class="text-white">leader</span>]</span>
+					{/if}
+					{#if you?.user.id === member.user.id}
+						<span class="text-primary">[<span class="text-emerald-400">you</span>]</span>
+					{/if}
+					<div class="grow" />
+					{#if leader && !member.leader}
+						<button class="text-error-red hover:underline" type="submit" formaction="?/kickMember">
+							Kick
+						</button>
+					{/if}
+				</div>
 				<input type="hidden" name="userId" value={member.user.id} />
 			</form>
 		{/each}
