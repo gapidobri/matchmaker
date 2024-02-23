@@ -43,6 +43,7 @@
 				/>
 			{:else if data.match}
 				<MatchInfo
+					game={data.games.find((g) => g.id === data.match?.gameId)}
 					match={data.match}
 					leader={data.leader}
 					expectedPlayerCount={data.expectedPlayerCount}

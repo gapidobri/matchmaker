@@ -59,7 +59,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			const count = await prisma.partyMember.count({
 				where: { party: { queue: { gameId: game.id } } },
 			});
-			return { ...game, playerCount: count };
+			return {
+				id: game.id,
+				name: game.name,
+				min_team_size: game.min_team_size,
+				min_teams: game.min_teams,
+				playerCount: count,
+			};
 		}),
 	);
 
@@ -261,8 +267,8 @@ export const actions: Actions = {
 			data: { teamId: null },
 		});
 
-		await cleanupTeams();
-
 		await emitPartyUpdate(party.id);
+
+		await cleanupTeams();
 	},
 };

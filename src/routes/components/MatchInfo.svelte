@@ -1,7 +1,9 @@
 <script lang="ts">
+	import type { GameConfig } from '$lib/config';
 	import type { Match, Server } from '@prisma/client';
 
-	export let match: Pick<Match, 'id' | 'status'> & {
+	export let game: Pick<GameConfig, 'name'> | undefined;
+	export let match: Pick<Match, 'id' | 'status' | 'gameId'> & {
 		server: Pick<
 			Server,
 			'connectedPlayerIds' | 'connectionString' | 'host' | 'port' | 'password'
@@ -9,17 +11,23 @@
 	};
 	export let expectedPlayerCount: number;
 	export let leader: boolean;
+
+	const statuses = {
+		CREATING: 'The server is being created',
+		WAIT_FOR_JOIN: 'The server is waiting for players to join',
+		IN_PROGRESS: 'The match is in progress',
+	};
 </script>
 
-<h2>In match {match.id}</h2>
-<p>Status: {match.status}</p>
+<h2>In match {game?.name ?? ''}</h2>
+<p>Status: {statuses[match.status]}</p>
 {#if match.server}
 	<p>
 		Players connected: {match.server.connectedPlayerIds.length}/{expectedPlayerCount}
 	</p>
 	{#if match.status !== 'CREATING'}
 		{#if match.server.connectionString}
-			<a href={match.server.connectionString}>{match.server?.connectionString}</a>
+			<a class="text-green-500" href={match.server.connectionString}>Connect to server</a>
 		{:else}
 			<p>IP: {match.server.host}</p>
 			<p>Port: {match.server.port}</p>
@@ -30,5 +38,5 @@
 	{/if}
 {/if}
 {#if leader}
-	<button type="submit" formaction="?/leaveMatch">Leave Match</button>
+	<button class="text-error-red" type="submit" formaction="?/leaveMatch">Leave Match</button>
 {/if}

@@ -32,6 +32,7 @@ interface DeploymentData {
 	egg: number;
 	docker_image: string;
 	startup: string;
+	port_count?: number;
 	limits: {
 		memory: number;
 		swap: number;

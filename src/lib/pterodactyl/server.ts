@@ -14,14 +14,14 @@ export async function createServer(match: Match) {
 	const servers = await pteroAdmin.getAllServers();
 	const nodes = await pteroAdmin.getAllNodes();
 
-	// if (env.PTERODACTYL_ALLOWED_NODES) {
-	// 	const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',');
-	// 	for (const node of nodes) {
-	// 		if (!allowedNodes.includes(node.attributes.id.toString())) {
-	// 			nodes.splice(nodes.indexOf(node), 1);
-	// 		}
-	// 	}
-	// }
+	if (env.PTERODACTYL_ALLOWED_NODES) {
+		const allowedNodes = env.PTERODACTYL_ALLOWED_NODES.split(',');
+		for (const node of nodes) {
+			if (!allowedNodes.includes(node.attributes.id.toString())) {
+				nodes.splice(nodes.indexOf(node), 1);
+			}
+		}
+	}
 
 	if (nodes.length === 0) {
 		throw new Error('No nodes available');
@@ -47,18 +47,38 @@ export async function createServer(match: Match) {
 
 	const nodeId = availableNodes[Math.floor(Math.random() * availableNodes.length)][0];
 
-	// Get free allocation
-	const allocations = await pteroAdmin.getAllAllocations(nodeId);
-	const allocation = allocations.find((a) => !a.attributes.assigned);
-	if (!allocation) {
-		throw new Error('No free allocations');
-	}
-
 	// Create server
 	const game = await getGame(match.gameId);
 	if (!game) {
 		throw new Error(`Game with id ${match.gameId} not found`);
 	}
+
+	// Get free allocation
+	const allocations = await pteroAdmin
+		.getAllAllocations(nodeId)
+		.then((r) => r.sort((a, b) => a.attributes.port - b.attributes.port));
+
+	const portCount = game.deployment.data.port_count ?? 1;
+
+	// Find consecutive free allocations
+	let freeAllocations = [];
+	for (let i = 0; i < allocations.length; i++) {
+		const allocation = allocations[i].attributes;
+		if (!allocation.assigned) {
+			freeAllocations.push(allocation);
+		} else {
+			freeAllocations = [];
+		}
+		if (freeAllocations.length === portCount) {
+			break;
+		}
+	}
+	if (freeAllocations.length < portCount) {
+		throw new Error('Not enough free allocations available');
+	}
+
+	const allocation = freeAllocations.shift()!;
+	const moreAllocationsIds = freeAllocations.map((a) => a.id);
 
 	const { environment } = game.deployment.data;
 
@@ -78,14 +98,14 @@ export async function createServer(match: Match) {
 		'', // description
 		game.deployment.data.nest, // nestId
 		game.deployment.data.egg, // eggId
-		allocation.attributes.id, // defaultAllocationId
+		allocation.id, // defaultAllocationId
 		undefined, // addAllocationIds
 		environment, // environment
 		game.deployment.data.limits.cpu, // cpu
 		game.deployment.data.limits.memory, // ram
 		game.deployment.data.limits.disk, // disk
 		0, // databaseLimit
-		0, // allocationLimit
+		portCount, // allocationLimit
 		0, // backupLimit
 		game.deployment.data.startup, // startupCmd
 		game.deployment.data.docker_image, // dockerImage
@@ -94,11 +114,15 @@ export async function createServer(match: Match) {
 		true, // startOnCompletion
 	);
 
+	await pteroAdmin.editServerBuild(server.id, {
+		addAllocations: moreAllocationsIds,
+	});
+
 	let connectionString: string | undefined;
 	if (game.connection_string) {
 		connectionString = game.connection_string
-			.replaceAll('${HOST}', allocation.attributes.ip)
-			.replaceAll('${PORT}', allocation.attributes.port.toString())
+			.replaceAll('${HOST}', allocation.ip)
+			.replaceAll('${PORT}', allocation.port.toString())
 			.replaceAll('${PASSWORD}', password ?? '');
 	}
 
@@ -106,8 +130,8 @@ export async function createServer(match: Match) {
 		data: {
 			pterodactylId: server.id,
 			pterodactylUuid: server.uuid,
-			host: allocation.attributes.ip,
-			port: allocation.attributes.port,
+			host: allocation.ip,
+			port: allocation.port,
 			password,
 			connectionString,
 			match: { connect: { id: match.id } },
@@ -130,7 +154,11 @@ export async function deleteServer(serverId: string) {
 
 	await pteroAdmin.deleteServer(server.pterodactylId);
 
-	await prisma.server.delete({ where: { id: serverId } });
+	try {
+		await prisma.server.delete({ where: { id: serverId } });
+	} catch (e) {
+		logger.error(`Failed to delete server with id ${serverId}`);
+	}
 }
 
 export async function sendStartGameCommand(serverId: string) {

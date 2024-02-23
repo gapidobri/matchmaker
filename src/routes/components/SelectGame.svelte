@@ -2,7 +2,9 @@
 	import { enhance } from '$app/forms';
 	import type { GameConfig } from '$lib/config';
 
-	export let games: (GameConfig & { playerCount: number })[];
+	export let games: (Pick<GameConfig, 'id' | 'name' | 'min_team_size' | 'min_teams'> & {
+		playerCount: number;
+	})[];
 </script>
 
 <div class="flex flex-col border-2 border-primary p-2">
