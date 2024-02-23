@@ -3,7 +3,7 @@
 ## Requirements
 
 - Docker
-- Bun
+- Node.js
 
 ## Setting up the development environment
 
@@ -46,23 +46,23 @@ OIDC_CLIENT_SECRET=your_client_secret
 14. Install the dependencies
 
 ```bash
-bun install
+npm run i
 ```
 
 15. Generate the Prisma client
 
 ```bash
-bun run prisma:generate
+npm run prisma:generate
 ```
 
 16. Push the database schema to the database
 
 ```bash
-bun run prisma:push
+npm run prisma:push
 ```
 
 17. Start the development server
 
 ```bash
-bun dev
+npm run dev
 ```

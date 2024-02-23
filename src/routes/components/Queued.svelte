@@ -1,13 +1,17 @@
 <script lang="ts">
-	import type { Queue } from '@prisma/client';
+	import type { GameConfig } from '$lib/config';
 
-	export let queue: Queue;
+	export let game: GameConfig & { playerCount: number };
 	export let leader: boolean;
 </script>
 
-<div>
-	<h2>Queued for {queue.gameId}</h2>
+<div class="flex flex-col items-center">
+	<span>
+		Queued for {game.name} ({game.playerCount}/{game.min_team_size * game.min_teams} players)
+	</span>
 	{#if leader}
-		<button type="submit" formaction="?/leaveQueue">Leave Queue</button>
+		<button class="text-[#f00] hover:underline" type="submit" formaction="?/leaveQueue">
+			Leave Queue
+		</button>
 	{/if}
 </div>

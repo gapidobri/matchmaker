@@ -27,12 +27,20 @@
 		<CreateJoinParty message={form?.message} success={form?.success} />
 	{:else}
 		<div class="flex flex-col items-stretch space-y-2 w-full max-w-screen-lg">
-			<PartyInfo party={data.party} you={data.session} members={data.party.members} leader={data.leader} />
+			<PartyInfo
+				party={data.party}
+				you={data.session}
+				members={data.party.members}
+				leader={data.leader}
+			/>
 			{#if data.leader}
 				<JoinRequests joinRequests={data.party.joinRequests} />
 			{/if}
 			{#if data.party.queue}
-				<Queued queue={data.party.queue} leader={data.leader} />
+				<Queued
+					game={data.games.find((g) => g.id === data.party?.queue?.gameId)}
+					leader={data.leader}
+				/>
 			{:else if data.match}
 				<MatchInfo
 					match={data.match}

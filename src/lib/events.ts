@@ -72,3 +72,10 @@ export async function emitMatchUpdate(matchId: string) {
 		client.update();
 	}
 }
+
+export async function emitUpdateForAll() {
+	logger.debug('Emitting update for all clients');
+	for (const client of LiveUpdateClient.clients) {
+		client.update();
+	}
+}

@@ -2,7 +2,7 @@ import { getUserId } from '$lib/auth';
 import { prisma } from '$lib/prisma';
 import { error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { emitPartyUpdate } from '$lib/events';
+import { emitPartyUpdate, emitUpdateForAll } from '$lib/events';
 import { getConfig } from '$lib/config';
 import { getGame } from '$lib/game';
 import { getPartyByUserId, leaveParty } from '$lib/party/party';
@@ -52,7 +52,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		},
 	});
 
-	const games = await getConfig();
+	const config = await getConfig();
+
+	const games = await Promise.all(
+		config.map(async (game) => {
+			const count = await prisma.partyMember.count({
+				where: { party: { queue: { gameId: game.id } } },
+			});
+			return { ...game, playerCount: count };
+		}),
+	);
 
 	return {
 		party,
@@ -214,7 +223,7 @@ export const actions: Actions = {
 			},
 		});
 
-		await emitPartyUpdate(party.id);
+		await emitUpdateForAll();
 
 		await processQueues(gameId);
 	},
@@ -236,7 +245,7 @@ export const actions: Actions = {
 			},
 		});
 
-		await emitPartyUpdate(party.id);
+		await emitUpdateForAll();
 	},
 
 	async leaveMatch({ locals }) {
