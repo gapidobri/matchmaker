@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private';
 import fs from 'fs/promises';
 import path from 'path';
 import YAML from 'yaml';
@@ -45,7 +46,7 @@ interface DeploymentData {
 
 // TODO: Load once on server start
 export async function getConfig(): Promise<GameConfig[]> {
-	const configPath = './config/games';
+	const configPath = env.GAMES_FOLDER ?? './config/games';
 	const configDir = await fs.readdir(configPath);
 
 	const configs: GameConfig[] = [];
