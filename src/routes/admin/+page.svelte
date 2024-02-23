@@ -54,7 +54,7 @@
 						<form method="post" use:enhance>
 							<input type="hidden" name="matchId" value={match.id} />
 							<button type="submit" formaction="?/startMatch">Start</button>
-							<button type="submit" formaction="?/deleteMatch" class="text-[#f00]">Delete</button>
+							<button type="submit" formaction="?/deleteMatch" class="text-error-red">Delete</button>
 						</form>
 					</td>
 				</tr>
@@ -89,7 +89,7 @@
 					<td class="px-2">
 						<form method="post" use:enhance>
 							<input type="hidden" name="serverId" value={server.id} />
-							<button type="submit" formaction="?/deleteServer" class="text-[#f00]">Delete</button>
+							<button type="submit" formaction="?/deleteServer" class="text-error-red">Delete</button>
 						</form>
 					</td>
 				</tr>

@@ -18,7 +18,7 @@
 			name="name"
 			id="name"
 			placeholder="Name"
-			class="bg-transparent border-2 text-center select-none focus:outline-none border-primary"
+			class="bg-transparent border-2 text-center select-none focus:outline-none border-primary placeholder:text-placeholder"
 		/>
 		<div class="w-full flex justify-center space-x-4">
 			<a class="hover:underline" href="/">Back</a>
@@ -26,5 +26,5 @@
 		</div>
 	</form>
 
-	<span class="mt-4 h-4 text-[#f00]">{form?.message ?? ''}</span>
+	<span class="mt-4 h-4 text-error-red">{form?.message ?? ''}</span>
 </div>

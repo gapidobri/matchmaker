@@ -5,10 +5,10 @@
 	export let games: GameConfig[];
 </script>
 
-<div class="flex flex-col">
-	<span class="text-2xl">Select Game Queue</span>
+<div class="flex flex-col border-2 border-primary p-2">
+	<span class="text-2xl mb-2">Select Game Queue</span>
 
-	<form method="post" class="flex flex-col justify-start" use:enhance>
+	<form method="post" class="grid lg:grid-cols-2 grid-cols-1 justify-start max-h-[30vh] overflow-y-auto scroll" use:enhance>
 		{#each games as game}
 			<button
 				class="w-max hover:underline"

@@ -5,7 +5,7 @@
 	import Navbar from './components/Navbar.svelte';
 </script>
 
-<div class="flex flex-col bg-black font-mono h-screen w-screen text-primary border-primary">
+<div class="flex flex-col bg-offblack font-mono h-screen w-screen text-primary border-primary">
 	{#if $page.data.session}
 		<Navbar user={$page.data.session.user} />
 		<slot />

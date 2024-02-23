@@ -10,17 +10,17 @@
 		</div>
 		<div class="border-2 border-primary h-32 w-64 flex items-center justify-center">
 			<div class="flex flex-col items-center space-y-2">
-				<label for="code">Join Party</label>
 				<input
 					type="text"
 					name="code"
 					id="code"
-					class="bg-transparent border-2 text-center select-none focus:outline-none border-primary"
+					placeholder="Invite code"
+					class="bg-transparent border text-center select-none placeholder:text-placeholder focus:outline-none border-primary"
 				/>
-				<button class="hover:underline" type="submit" formaction="?/joinParty">Join</button>
+				<button class="hover:underline" type="submit" formaction="?/joinParty">Join party</button>
 			</div>
 		</div>
 	</div>
 
-	<span class="mt-4 h-4 text-[#f00]" class:text-primary={success}>{message ?? ''}</span>
+	<span class="mt-4 h-4 text-error-red" class:text-primary={success}>{message ?? ''}</span>
 </div>

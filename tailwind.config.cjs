@@ -5,7 +5,12 @@ const config = {
 	theme: {
 		extend: {
 			colors: {
-				primary: '#00ff00'
+				primary: '#DF7716',
+				accent: '#C27E3F',
+				'offblack-d': '#090909',
+				offblack: '#0e0e0e',
+				'error-red': '#D21D12',
+				'placeholder': '#634C36'
 			}
 		},
 	},

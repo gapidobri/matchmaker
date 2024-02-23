@@ -14,7 +14,7 @@
 			<div class="grow" />
 			<div class="mr-2">
 				<button class="hover:underline" type="submit" formaction="?/acceptJoin">✔</button>
-				<button class="text-[#f00] hover:underline" type="submit" formaction="?/declineJoin">
+				<button class="text-error-red hover:underline" type="submit" formaction="?/declineJoin">
 					✘
 				</button>
 			</div>
