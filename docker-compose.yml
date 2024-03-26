@@ -1,0 +1,127 @@
+version: '3.9'
+
+name: matchmaker
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik
+    command: --api.insecure=true --providers.docker --entrypoints.web.address=:80 --entrypoints.websecure.address=:443
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  app-db:
+    image: postgres:16
+    container_name: app-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: matchmaker
+    ports:
+      - 5432:5432
+    volumes:
+      - app-db:/var/lib/postgresql/data
+
+  authentik-db:
+    image: docker.io/library/postgres:12-alpine
+    container_name: authentik-db
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -d authentik -U authentik']
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 5s
+    volumes:
+      - authentik-db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: authentik
+      POSTGRES_USER: authentik
+      POSTGRES_DB: authentik
+
+  authentik-redis:
+    image: docker.io/library/redis:alpine
+    container_name: authentik-redis
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping | grep PONG']
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - authentik-redis:/data
+
+  authentik-server:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.6}
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik
+      AUTHENTIK_SECRET_KEY: authentik
+    volumes:
+      - authentik-media:/media
+      - authentik-custom-templates:/templates
+    ports:
+      - '9000:9000'
+      - '9443:9443'
+    depends_on:
+      - authentik-db
+      - authentik-redis
+    labels:
+      traefik.http.routers.authentik-server.rule: Host(`authentik.localhost`)
+
+  authentik-worker:
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2023.10.6}
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: authentik-redis
+      AUTHENTIK_POSTGRESQL__HOST: authentik-db
+      AUTHENTIK_POSTGRESQL__USER: authentik
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD: authentik
+      AUTHENTIK_SECRET_KEY: authentik
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - authentik-media:/media
+      - authentik-certs:/certs
+      - authentik-custom-templates:/templates
+    depends_on:
+      - authentik-db
+      - authentik-redis
+
+  # steam-oidc-proxy:
+  #   image: ghcr.io/gapidobri/steam-openid-connect-provider:master
+  #   container_name: steam-oidc-proxy
+  #   environment:
+  #     OpenID__RedirectUri: 'http://authentik.localhost/source/oauth/callback/steam/'
+  #     OpenID__ClientID: 'matchmaker'
+  #     OpenID__ClientSecret: 'matchmaker'
+  #     OpenID__ClientName: 'matchmaker'
+  #     Steam__ApplicationKey: '831BD493725A19F97AC66571A8553392'
+  #   labels:
+  #     traefik.http.routers.steam-oidc-proxy.rule: Host(`steam-oidc-proxy.localhost`)
+  #     traefik.http.routers.steam-oidc-proxy.tls: ''
+
+volumes:
+  app-db:
+  mqtt:
+  authentik-db:
+  authentik-redis:
+  authentik-media:
+  authentik-custom-templates:
+  authentik-certs:

@@ -1,0 +1,38 @@
+id: unturned
+name: Unturned
+enabled: true
+
+min_teams: 1
+max_teams: 1
+min_team_size: 1
+max_team_size: 9999
+
+join_regex: 'Connecting: PlayerID: (?<userId>[0-9]*)'
+leave_regex: 'Disconnecting: PlayerID: (?<userId>[0-9]*)'
+
+password: true
+
+connection_string: 'steam://connect/${HOST}:${PORT}/${PASSWORD}'
+
+deployment:
+  type: server
+  data:
+    port_count: 2
+    nest: 5
+    egg: 17
+    docker_image: ghcr.io/parkervcp/steamcmd:debian
+    startup: './Unturned_Headless.x86_64 -batchmode -nographics -bind 0.0.0.0 -port {{SERVER_PORT}} -GSLT {{GSLT}} -Name "{{SRV_NAME}}" -Password {{SRV_PW}} +LanServer/{{SRV_ID}}'
+    limits:
+      memory: 4096
+      swap: 0
+      disk: 0
+      io: 500
+      cpu: 0
+    environment:
+      SRV_NAME: FriLAN Unturned
+      SRV_ID: FriLANUnturned
+      SRCDS_APPID: '1110390'
+      GSLT: 905135FFDC753D2F7510693AE253F637
+      LD_LIBRARY_PATH: ./Unturned_Headless_Data/Plugins/x86_64/
+      AUTO_UPDATE: 1
+      SRV_PW: '${PASSWORD}'

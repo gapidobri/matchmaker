@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  accounts      Account[]
+  steamId       String?   @unique
+
+  partyMember  PartyMember?
+  joinRequests Party[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([identifier, token])
+}
+
+model Party {
+  id   String @id @default(cuid())
+  name String
+  code String @unique
+
+  queue        Queue?
+  members      PartyMember[]
+  joinRequests User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PartyMember {
+  user   User   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId String @unique
+
+  party   Party  @relation(fields: [partyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  partyId String
+
+  leader Boolean @default(false)
+
+  team   Team?   @relation(fields: [teamId], references: [id])
+  teamId String?
+
+  connectedServer   Server? @relation(fields: [connectedServerId], references: [id])
+  connectedServerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, partyId])
+}
+
+model Queue {
+  party   Party  @relation(fields: [partyId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  partyId String @unique
+
+  gameId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([partyId, gameId])
+}
+
+model Team {
+  id String @id @default(cuid())
+
+  players PartyMember[]
+
+  match   Match  @relation(fields: [matchId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  matchId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MatchStatus {
+  CREATING // Creating the match
+  WAIT_FOR_JOIN // Waiting for players to join
+  IN_PROGRESS // Game is running
+}
+
+model Match {
+  id String @id @default(cuid())
+
+  teams Team[]
+
+  gameId String
+
+  server Server?
+
+  status MatchStatus @default(CREATING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id String @id @default(cuid())
+
+  pterodactylId   Int    @unique
+  pterodactylUuid String @unique
+
+  connectionString String?
+
+  host     String
+  port     Int
+  password String?
+
+  connectedPlayers   PartyMember[]
+  connectedPlayerIds String[]
+
+  match   Match  @relation(fields: [matchId], references: [id])
+  matchId String @unique
+}

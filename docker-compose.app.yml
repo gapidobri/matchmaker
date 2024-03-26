@@ -1,0 +1,20 @@
+version: '3.9'
+
+name: matchmaker
+
+services:
+  app:
+    restart: always
+    container_name: app
+    build: .
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@app-db:5432/matchmaker
+      - EXTERNAL_AUTH_URL=http://localhost:9000
+      - OIDC_ISSUER=http://authentik-server:9000/application/o/matchmaker/
+      - ORIGIN=http://localhost:3000
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./config:/app/config
+    env_file:
+      - .env
